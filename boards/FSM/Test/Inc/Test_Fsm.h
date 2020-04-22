@@ -5,5 +5,7 @@
 
 class FsmTest : public testing::Test
 {
-    // TODO: Put any shared code between tests here
+  protected:
+    struct FlowMeter *primary_flow_meter;
+    struct FlowMeter *secondary_flow_meter;
 };
