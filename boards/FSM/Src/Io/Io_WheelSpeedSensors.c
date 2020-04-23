@@ -5,27 +5,18 @@
 #include "Io_SharedFreqOnlyPwmInput.h"
 #include "main.h"
 
-// TODO: Configure timer prescaler value to be able to measure min and max
-// frequencies
-
+// Note: Unit for length is measured in metres unless specified
 static const float MPS_TO_KPH_CONVERSION_FACTOR = 3.6;
-
 // TODO: Figure out what these constants will be for the new car
-static const int   RELUCTOR_RING_TOOTH_COUNT = 48;
-
-//Tire diameter measured in metres
-static const float TIRE_DIAMETER             = 0.52;
-
-//static const float MAX_WHEEL_SPEED           = 200.0;
-
-static const float ARC_LENGTH_PER_TICK =
-    (M_PI * TIRE_DIAMETER) /
-    RELUCTOR_RING_TOOTH_COUNT;
+static const size_t RELUCTOR_RING_TOOTH_COUNT = 48;
+static const float  TIRE_DIAMETER             = 0.52;
+static const float  ARC_LENGTH_PER_RELUCTOR_TOOTH =
+    (float)((M_PI * TIRE_DIAMETER) / RELUCTOR_RING_TOOTH_COUNT);
 
 static struct FreqOnlyPwmInput *left_wheel_speed_sensor,
     *right_wheel_speed_sensor;
 
-void Io_WheelSpeeds_Init(
+void Io_WheelSpeedSensors_Init(
     TIM_HandleTypeDef *htim_left_wheel_speed_sensor,
     TIM_HandleTypeDef *htim_right_wheel_speed_sensor)
 {
@@ -43,20 +34,14 @@ void Io_WheelSpeeds_Init(
 
 float Io_WheelSpeedSensors_GetLeftSpeed(void)
 {
-    // Wheel_Speed_Kph = (Arc_Length / Tick ) * (Measured_Frequency) * (Mps_To_Kph)
-    // Note: Measured_Frequency = Number_of_Ticks / s
-    return MPS_TO_KPH_CONVERSION_FACTOR * ARC_LENGTH_PER_TICK /
-           (Io_SharedFreqOnlyPwmInput_GetFrequency(left_wheel_speed_sensor) /
-            (float)TIM16_PRESCALER);
+    return MPS_TO_KPH_CONVERSION_FACTOR * ARC_LENGTH_PER_RELUCTOR_TOOTH *
+           Io_SharedFreqOnlyPwmInput_GetFrequency(left_wheel_speed_sensor);
 }
 
 float Io_WheelSpeedSensors_GetRightSpeed(void)
 {
-    // Wheel_Speed_Kph = (Arc_Length / Tick ) * (Measured_Frequency) * (Mps_To_Kph)
-    // Note: Measured_Frequency = Number_of_Ticks / s
-    return MPS_TO_KPH_CONVERSION_FACTOR * ARC_LENGTH_PER_TICK /
-           (Io_SharedFreqOnlyPwmInput_GetFrequency(right_wheel_speed_sensor) /
-            (float)TIM17_PRESCALER);
+    return MPS_TO_KPH_CONVERSION_FACTOR * ARC_LENGTH_PER_RELUCTOR_TOOTH *
+           Io_SharedFreqOnlyPwmInput_GetFrequency(right_wheel_speed_sensor);
 }
 
 void Io_WheelSpeedSensors_InputCaptureCallback(TIM_HandleTypeDef *htim)

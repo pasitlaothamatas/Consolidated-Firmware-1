@@ -36,6 +36,7 @@
 #include "Io_SoftwareWatchdog.h"
 #include "Io_FlowMeters.h"
 #include "Io_HeartbeatMonitor.h"
+#include "Io_WheelSpeedSensors.h"
 
 #include "App_CanTx.h"
 #include "App_CanRx.h"
@@ -45,6 +46,7 @@
 #include "states/App_AirOpenState.h"
 #include "App_SharedConstants.h"
 #include "App_SharedHeartbeatMonitor.h"
+#include "App_WheelSpeedSensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,6 +89,7 @@ uint32_t            TaskCanTxBuffer[TASKCANTX_STACK_SIZE];
 osStaticThreadDef_t TaskCanTxControlBlock;
 /* USER CODE BEGIN PV */
 struct FlowMeter *        primary_flow_meter, *secondary_flow_meter;
+struct WheelSpeedSensor * left_wheel_speed_sensor, *right_wheel_speed_sensor;
 struct World *            world;
 struct StateMachine *     state_machine;
 struct FsmCanTxInterface *can_tx;
@@ -193,6 +196,14 @@ int main(void)
     MX_TIM16_Init();
     MX_TIM17_Init();
     /* USER CODE BEGIN 2 */
+    DBGMCU->APB2FZ |=
+        DBGMCU_APB2_FZ_DBG_TIM16_STOP | DBGMCU_APB2_FZ_DBG_TIM17_STOP;
+    Io_WheelSpeedSensors_Init(&htim16, &htim17);
+    left_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetLeftSpeed);
+    right_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetRightSpeed);
+
     Io_FlowMeters_Init(&htim4);
     primary_flow_meter = App_FlowMeter_Create(Io_FlowMeters_GetPrimaryFlowRate);
     secondary_flow_meter =
@@ -496,9 +507,9 @@ static void MX_TIM16_Init(void)
 
     /* USER CODE END TIM16_Init 1 */
     htim16.Instance               = TIM16;
-    htim16.Init.Prescaler         = 0;
+    htim16.Init.Prescaler         = TIM16_PRESCALER;
     htim16.Init.CounterMode       = TIM_COUNTERMODE_UP;
-    htim16.Init.Period            = 0;
+    htim16.Init.Period            = TIM16_AUTO_RELOAD_REG;
     htim16.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
     htim16.Init.RepetitionCounter = 0;
     htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -540,9 +551,9 @@ static void MX_TIM17_Init(void)
 
     /* USER CODE END TIM17_Init 1 */
     htim17.Instance               = TIM17;
-    htim17.Init.Prescaler         = 0;
+    htim17.Init.Prescaler         = TIM17_PRESCALER;
     htim17.Init.CounterMode       = TIM_COUNTERMODE_UP;
-    htim17.Init.Period            = 0;
+    htim17.Init.Period            = TIM17_AUTO_RELOAD_REG;
     htim17.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
     htim17.Init.RepetitionCounter = 0;
     htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -694,6 +705,8 @@ void RunTask1kHz(void const *argument)
     {
         Io_CanTx_EnqueuePeriodicMsgs(
             can_tx, osKernelSysTick() * portTICK_PERIOD_MS);
+        App_WheelSpeedSensor_Tick(left_wheel_speed_sensor);
+        App_WheelSpeedSensor_Tick(right_wheel_speed_sensor);
         App_FlowMeter_Tick(primary_flow_meter);
         App_FlowMeter_Tick(secondary_flow_meter);
         // Watchdog check-in must be the last function called before putting
@@ -761,6 +774,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         Io_FlowMeters_CheckIfPrimaryIsActive();
         Io_FlowMeters_CheckIfSecondaryIsActive();
+    }
+    else if (htim->Instance == TIM16)
+    {
+        Io_WheelSpeedSensors_CheckIfLeftSensorIsActive();
+    }
+    else if (htim->Instance == TIM17)
+    {
+        Io_WheelSpeedSensors_CheckIfRightSensorIsActive();
     }
     /* USER CODE END Callback 0 */
     if (htim->Instance == TIM6)
