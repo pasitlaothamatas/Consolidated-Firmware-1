@@ -152,7 +152,6 @@ TEST_F(
             fake_frequency,
             App_CanTx_GetPeriodicSignal_SECONDARY_FLOW_RATE(can_tx_interface));
 
-        //Increment fake_frequency to ensure that measured frequency is updated in all state machine transitions
-        fake_frequency++;
+        // To avoid false positives, we use a different frequency each time
     }
 }
