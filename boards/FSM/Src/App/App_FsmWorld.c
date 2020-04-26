@@ -11,6 +11,8 @@ struct FsmWorld
     struct HeartbeatMonitor * heartbeat_monitor;
     struct FlowMeter *        primary_flow_meter;
     struct FlowMeter *        secondary_flow_meter;
+    struct WheelSpeedSensor * left_wheel_speed;
+    struct WheelSpeedSensor * right_wheel_speed;
 };
 
 struct FsmWorld *App_FsmWorld_Create(
@@ -18,7 +20,9 @@ struct FsmWorld *App_FsmWorld_Create(
     struct FsmCanRxInterface *const can_rx_interface,
     struct HeartbeatMonitor *const  heartbeat_monitor,
     struct FlowMeter *const         primary_flow_meter,
-    struct FlowMeter *const         secondary_flow_meter)
+    struct FlowMeter *const         secondary_flow_meter,
+    struct WheelSpeedSensor *const  left_wheel_speed,
+    struct WheelSpeedSensor *const  right_wheel_speed)
 {
     struct FsmWorld *world = (struct FsmWorld *)malloc(sizeof(struct FsmWorld));
     assert(world != NULL);
@@ -28,6 +32,8 @@ struct FsmWorld *App_FsmWorld_Create(
     world->heartbeat_monitor    = heartbeat_monitor;
     world->primary_flow_meter   = primary_flow_meter;
     world->secondary_flow_meter = secondary_flow_meter;
+    world->left_wheel_speed     = left_wheel_speed;
+    world->right_wheel_speed    = right_wheel_speed;
 
     return world;
 }
@@ -65,4 +71,16 @@ struct FlowMeter *
     App_FsmWorld_GetSecondaryFlowMeter(const struct FsmWorld *const world)
 {
     return world->secondary_flow_meter;
+}
+
+struct WheelSpeedSensor *
+    App_FsmWorld_GetLeftWheelSpeedSensor(const struct FsmWorld *const world)
+{
+    return world->left_wheel_speed;
+}
+
+struct WheelSpeedSensor *
+    App_FsmWorld_GetRightWheelSpeedSensor(const struct FsmWorld *const world)
+{
+    return world->right_wheel_speed;
 }

@@ -144,9 +144,14 @@ int main(void)
     Io_SharedHardFaultHandler_Init();
 
     Io_FlowMeters_Init(&htim4);
+    Io_WheelSpeedSensors_Init(&htim16, &htim17);
     primary_flow_meter = App_FlowMeter_Create(Io_FlowMeters_GetPrimaryFlowRate);
     secondary_flow_meter =
         App_FlowMeter_Create(Io_FlowMeters_GetSecondaryFlowRate);
+    left_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetLeftSpeed);
+    right_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetRightSpeed);
 
     can_tx = App_CanTx_Create(
         Io_CanTx_EnqueueNonPeriodicMsg_FSM_STARTUP,
@@ -161,7 +166,8 @@ int main(void)
 
     world = App_FsmWorld_Create(
         can_tx, can_rx, heartbeat_monitor, primary_flow_meter,
-        secondary_flow_meter);
+        secondary_flow_meter, left_wheel_speed_sensor,
+        right_wheel_speed_sensor);
 
     state_machine = App_SharedStateMachine_Create(world, App_GetAirOpenState());
 
@@ -196,18 +202,6 @@ int main(void)
     MX_TIM16_Init();
     MX_TIM17_Init();
     /* USER CODE BEGIN 2 */
-    DBGMCU->APB2FZ |=
-        DBGMCU_APB2_FZ_DBG_TIM16_STOP | DBGMCU_APB2_FZ_DBG_TIM17_STOP;
-    Io_WheelSpeedSensors_Init(&htim16, &htim17);
-    left_wheel_speed_sensor =
-        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetLeftSpeed);
-    right_wheel_speed_sensor =
-        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetRightSpeed);
-
-    Io_FlowMeters_Init(&htim4);
-    primary_flow_meter = App_FlowMeter_Create(Io_FlowMeters_GetPrimaryFlowRate);
-    secondary_flow_meter =
-        App_FlowMeter_Create(Io_FlowMeters_GetSecondaryFlowRate);
 
     struct CanMsgs_fsm_startup_t payload = { .dummy = 0 };
     App_CanTx_SendNonPeriodicMsg_FSM_STARTUP(can_tx, &payload);

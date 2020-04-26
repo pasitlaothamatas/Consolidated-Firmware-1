@@ -4,6 +4,7 @@
 #include "App_CanRx.h"
 #include "App_SharedHeartbeatMonitor.h"
 #include "App_FlowMeter.h"
+#include "App_WheelSpeedSensor.h"
 
 struct FsmWorld;
 
@@ -25,7 +26,9 @@ struct FsmWorld *App_FsmWorld_Create(
     struct FsmCanRxInterface *can_rx_interface,
     struct HeartbeatMonitor * heartbeat_monitor,
     struct FlowMeter *        primary_flow_meter,
-    struct FlowMeter *        secondary_flow_meter);
+    struct FlowMeter *        secondary_flow_meter,
+    struct WheelSpeedSensor * left_wheel_speed,
+    struct WheelSpeedSensor * right_wheel_speed);
 
 /**
  * Destroy the given FSM world, freeing the memory associated with it
@@ -41,3 +44,7 @@ struct FlowMeter *
     App_FsmWorld_GetPrimaryFlowMeter(const struct FsmWorld *world);
 struct FlowMeter *
     App_FsmWorld_GetSecondaryFlowMeter(const struct FsmWorld *world);
+struct WheelSpeedSensor *
+    App_FsmWorld_GetLeftWheelSpeedSensor(const struct FsmWorld *world);
+struct WheelSpeedSensor *
+    App_FsmWorld_GetRightWheelSpeedSensor(const struct FsmWorld *world);
