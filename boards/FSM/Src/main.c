@@ -143,16 +143,6 @@ int main(void)
     __HAL_DBGMCU_FREEZE_IWDG();
     Io_SharedHardFaultHandler_Init();
 
-    Io_FlowMeters_Init(&htim4);
-    Io_WheelSpeedSensors_Init(&htim16, &htim17);
-    primary_flow_meter = App_FlowMeter_Create(Io_FlowMeters_GetPrimaryFlowRate);
-    secondary_flow_meter =
-        App_FlowMeter_Create(Io_FlowMeters_GetSecondaryFlowRate);
-    left_wheel_speed_sensor =
-        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetLeftSpeed);
-    right_wheel_speed_sensor =
-        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetRightSpeed);
-
     can_tx = App_CanTx_Create(
         Io_CanTx_EnqueueNonPeriodicMsg_FSM_STARTUP,
         Io_CanTx_EnqueueNonPeriodicMsg_FSM_WATCHDOG_TIMEOUT,
@@ -202,6 +192,16 @@ int main(void)
     MX_TIM16_Init();
     MX_TIM17_Init();
     /* USER CODE BEGIN 2 */
+    Io_FlowMeters_Init(&htim4);
+    primary_flow_meter = App_FlowMeter_Create(Io_FlowMeters_GetPrimaryFlowRate);
+    secondary_flow_meter =
+        App_FlowMeter_Create(Io_FlowMeters_GetSecondaryFlowRate);
+
+    Io_WheelSpeedSensors_Init(&htim16, &htim17);
+    left_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetLeftSpeed);
+    right_wheel_speed_sensor =
+        App_WheelSpeedSensor_Create(Io_WheelSpeedSensors_GetRightSpeed);
 
     struct CanMsgs_fsm_startup_t payload = { .dummy = 0 };
     App_CanTx_SendNonPeriodicMsg_FSM_STARTUP(can_tx, &payload);
@@ -699,10 +699,10 @@ void RunTask1kHz(void const *argument)
     {
         Io_CanTx_EnqueuePeriodicMsgs(
             can_tx, osKernelSysTick() * portTICK_PERIOD_MS);
-        App_WheelSpeedSensor_Tick(left_wheel_speed_sensor);
-        App_WheelSpeedSensor_Tick(right_wheel_speed_sensor);
         App_FlowMeter_Tick(primary_flow_meter);
         App_FlowMeter_Tick(secondary_flow_meter);
+        App_WheelSpeedSensor_Tick(left_wheel_speed_sensor);
+        App_WheelSpeedSensor_Tick(right_wheel_speed_sensor);
         // Watchdog check-in must be the last function called before putting
         // the task to sleep.
         Io_SharedSoftwareWatchdog_CheckInWatchdog(watchdog);
