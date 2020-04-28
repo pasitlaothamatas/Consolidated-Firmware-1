@@ -25,8 +25,6 @@ static void AirOpenStateRunOnTick(struct StateMachine *const state_machine)
 
     App_FlowMeter_Tick(primary_flow_meter);
     App_FlowMeter_Tick(secondary_flow_meter);
-    App_WheelSpeedSensor_Tick(left_wheel_speed_sensor);
-    App_WheelSpeedSensor_Tick(right_wheel_speed_sensor);
 
     App_SetPeriodicCanSignals_PrimaryFlowMeter(
         can_tx_interface, primary_flow_meter);

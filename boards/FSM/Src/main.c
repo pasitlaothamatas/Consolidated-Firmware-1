@@ -701,8 +701,8 @@ void RunTask1kHz(void const *argument)
             can_tx, osKernelSysTick() * portTICK_PERIOD_MS);
         App_FlowMeter_Tick(primary_flow_meter);
         App_FlowMeter_Tick(secondary_flow_meter);
-        App_WheelSpeedSensor_Tick(left_wheel_speed_sensor);
-        App_WheelSpeedSensor_Tick(right_wheel_speed_sensor);
+        App_WheelSpeedSensor_GetWheelSpeed(left_wheel_speed_sensor);
+        App_WheelSpeedSensor_GetWheelSpeed(right_wheel_speed_sensor);
         // Watchdog check-in must be the last function called before putting
         // the task to sleep.
         Io_SharedSoftwareWatchdog_CheckInWatchdog(watchdog);
