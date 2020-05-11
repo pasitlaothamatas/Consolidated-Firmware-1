@@ -184,7 +184,7 @@ int main(void)
     Io_WheelSpeedSensors_Init(&htim16, &htim17);
 
     adc2 = _Io_SharedAdc_Create(&hadc2, 1U);
-    Io_SteeringAngleSensor_Init(adc2, 3U, 1.9f);
+    Io_SteeringAngleSensor_Init(adc2, 2U, 1.9f);
 
     can_tx = App_CanTx_Create(
         Io_CanTx_EnqueueNonPeriodicMsg_FSM_STARTUP,
@@ -317,7 +317,7 @@ void SystemClock_Config(void)
         Error_Handler();
     }
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-    PeriphClkInit.Adc12ClockSelection  = RCC_ADC12PLLCLK_DIV1;
+    PeriphClkInit.Adc12ClockSelection  = RCC_ADC12PLLCLK_DIV2;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
         Error_Handler();
@@ -365,7 +365,7 @@ static void MX_ADC2_Init(void)
     sConfig.Channel      = ADC_CHANNEL_VREFINT;
     sConfig.Rank         = ADC_REGULAR_RANK_1;
     sConfig.SingleDiff   = ADC_SINGLE_ENDED;
-    sConfig.SamplingTime = ADC_SAMPLETIME_61CYCLES_5;
+    sConfig.SamplingTime = ADC_SAMPLETIME_19CYCLES_5;
     sConfig.OffsetNumber = ADC_OFFSET_NONE;
     sConfig.Offset       = 0;
     if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
@@ -382,7 +382,7 @@ static void MX_ADC2_Init(void)
     }
     /** Configure Regular Channel
      */
-    sConfig.Channel = ADC_CHANNEL_VREFINT;
+    sConfig.Channel = ADC_CHANNEL_3;
     sConfig.Rank    = ADC_REGULAR_RANK_3;
     if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
     {

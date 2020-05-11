@@ -59,7 +59,6 @@ extern "C"
     void BusFault_Handler(void);
     void UsageFault_Handler(void);
     void DebugMon_Handler(void);
-    void ADC1_2_IRQHandler(void);
     void USB_HP_CAN_TX_IRQHandler(void);
     void USB_LP_CAN_RX0_IRQHandler(void);
     void CAN_RX1_IRQHandler(void);

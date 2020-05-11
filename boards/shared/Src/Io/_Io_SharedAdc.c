@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <assert.h>
 #include "_Io_SharedAdc.h"
 #include "App_SharedConstants.h"
@@ -10,7 +11,11 @@ struct AdcInput
     uint32_t           num_active_channels;
     uint16_t           adc_max_value;
     uint16_t *         adc_readings;
+    bool               vrefint_included;
 };
+
+//Pointer to the VREFINT measured by the ADC
+static uint16_t * adc_input_with_vrefint;
 
 /**
  * Gets the ADC resolution for the given hadc
@@ -46,28 +51,40 @@ static ErrorStatus
 }
 
 struct AdcInput *
-    _Io_SharedAdc_Create(ADC_HandleTypeDef *hadc, size_t vrefint_rank)
+    _Io_SharedAdc_Create(ADC_HandleTypeDef *hadc, size_t vrefint_index)
 {
     assert(hadc != NULL);
-    assert(vrefint_rank > 0 && vrefint_rank <= hadc->Init.NbrOfConversion);
 
     static size_t          alloc_index = 0;
     static struct AdcInput adc_inputs[MAX_NUM_OF_ADC];
     static uint32_t adc_readings[MAX_NUM_OF_ADC][MAX_NUM_OF_ADC_CHANNELS];
 
-    assert(alloc_index < MAX_NUM_OF_ADC);
     struct AdcInput *const adc_input = &adc_inputs[alloc_index];
 
+    assert(alloc_index < MAX_NUM_OF_ADC);
     assert(_Io_GetAdcResolution(hadc, &adc_input->adc_max_value) == SUCCESS);
     adc_input->hadc                = hadc;
     adc_input->num_active_channels = hadc->Init.NbrOfConversion;
-    adc_input->vrefint_index       = vrefint_rank - 1;
     adc_input->adc_readings        = (uint16_t *)adc_readings[alloc_index];
 
     HAL_ADCEx_Calibration_Start(hadc, ADC_SINGLE_ENDED);
     HAL_ADC_Start_DMA(
         hadc, (uint32_t *)adc_input->adc_readings,
         adc_input->num_active_channels);
+
+    if (alloc_index == 0U)
+    {
+        //Initialize ADC instance containing VREFINT
+        assert(
+                vrefint_index > 0 && vrefint_index <= adc_input->num_active_channels);
+
+        adc_inputs->vrefint_index    = vrefint_index - 1;
+        adc_input_with_vrefint = &adc_input->adc_readings[adc_input->vrefint_index];
+    }
+    else
+    {
+        UNUSED(vrefint_index);
+    }
 
     return adc_input;
 }
@@ -87,7 +104,7 @@ float _Io_SharedAdc_GetChannelVoltage(
     //                      VREFINT_DATA
     //
     // VREFINT_CAL is the VREFINT calibration value (stored at 0x1FFF7BA)
-    // VREFINT_DATA is the actual VREFINT output value converted by the ADC
+    // VREFINT_DATA is the actual VREFINT output value converted by an ADC
     //
     // (2) Calculate the voltage of the given ADC Channel
     //
@@ -101,7 +118,7 @@ float _Io_SharedAdc_GetChannelVoltage(
 
     const uint16_t *const VREFINT_CALIBRATION_ADDRESS =
         (uint16_t *)(0x1FFFF7BA);
-    const float ACTUAL_VDDA = (float)(3.3f * (uint16_t)(*VREFINT_CALIBRATION_ADDRESS) / adc_input->adc_readings[adc_input->vrefint_index]);
+    const float ACTUAL_VDDA = (float)(3.3f * (uint16_t)(*VREFINT_CALIBRATION_ADDRESS) / *adc_input_with_vrefint);
 
     return (
         float)(ACTUAL_VDDA * adc_input->adc_readings[adc_rank - 1] / adc_input->adc_max_value);

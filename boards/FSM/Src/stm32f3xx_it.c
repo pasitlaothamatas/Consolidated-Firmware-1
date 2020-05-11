@@ -60,7 +60,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc2;
-extern ADC_HandleTypeDef hadc2;
 extern CAN_HandleTypeDef hcan;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim16;
@@ -166,20 +165,6 @@ void DebugMon_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
-
-/**
- * @brief This function handles ADC1 and ADC2 interrupts.
- */
-void ADC1_2_IRQHandler(void)
-{
-    /* USER CODE BEGIN ADC1_2_IRQn 0 */
-
-    /* USER CODE END ADC1_2_IRQn 0 */
-    HAL_ADC_IRQHandler(&hadc2);
-    /* USER CODE BEGIN ADC1_2_IRQn 1 */
-
-    /* USER CODE END ADC1_2_IRQn 1 */
-}
 
 /**
  * @brief This function handles USB high priority or CAN_TX interrupts.
