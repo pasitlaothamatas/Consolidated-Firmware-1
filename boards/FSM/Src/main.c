@@ -39,7 +39,7 @@
 #include "Io_RgbLedSequence.h"
 #include "Io_WheelSpeedSensors.h"
 #include "Io_SteeringAngleSensor.h"
-#include "_Io_SharedAdc.h"
+#include "Io_SharedAdc.h"
 #include "Io_SteeringAngleSensor.h"
 
 #include "App_FsmWorld.h"
@@ -183,8 +183,8 @@ int main(void)
 
     Io_WheelSpeedSensors_Init(&htim16, &htim17);
 
-    adc2 = _Io_SharedAdc_Create(&hadc2, 1U);
-    Io_SteeringAngleSensor_Init(adc2, 2U, 1.9f);
+    adc2 = Io_SharedAdc_Create(&hadc2, 1U);
+    Io_SteeringAngleSensor_Init(adc2, 3U, 1.9f);
 
     can_tx = App_CanTx_Create(
         Io_CanTx_EnqueueNonPeriodicMsg_FSM_STARTUP,

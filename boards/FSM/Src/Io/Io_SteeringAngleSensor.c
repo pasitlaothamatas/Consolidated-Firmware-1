@@ -1,6 +1,5 @@
 #include <assert.h>
-#include "_Io_SharedAdc.h"
-#include "Io_SteeringAngleSensor.h"
+#include "Io_SharedAdc.h"
 
 struct SteeringAngleSensor
 {
@@ -19,7 +18,7 @@ void Io_SteeringAngleSensor_Init(
 {
     assert(adc_input != NULL);
     assert(rank > 0U);
-    assert(rank <= _Io_SharedAdc_GetNumActiveChannel(adc_input));
+    assert(rank <= Io_SharedAdc_GetNumActiveChannel(adc_input));
 
     steering_angle_sensor.angle     = 0.0f;
     steering_angle_sensor.adc_input = adc_input;
@@ -39,13 +38,13 @@ void Io_SteeringAngleSensor_AdcConvCpltCallback(ADC_HandleTypeDef *hadc)
     // Scale factor used to map the adc measured voltage to an angle
     // static const float DEGREES_PER_VOLT = (float)(360.0 / 3.3);
 
-    if (hadc == _Io_SharedAdc_GetAdcHandle(steering_angle_sensor.adc_input))
+    if (hadc == Io_SharedAdc_GetAdcHandle(steering_angle_sensor.adc_input))
     {
         // steering_angle_sensor.angle =
         // (float)((_Io_SharedAdc_GetChannelVoltage(steering_angle_sensor.adc_input,
         // steering_angle_sensor.rank) - steering_angle_sensor.offset_voltage) /
         // DEGREES_PER_VOLT);
-        steering_angle_sensor.angle = _Io_SharedAdc_GetChannelVoltage(
+        steering_angle_sensor.angle = Io_SharedAdc_GetChannelVoltage(
             steering_angle_sensor.adc_input, steering_angle_sensor.rank);
     }
 }
