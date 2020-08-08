@@ -734,7 +734,8 @@ static void MX_GPIO_Init(void)
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(
         GPIOB,
-        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin,
+        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin |
+            SPI2_NSS_Pin,
         GPIO_PIN_RESET);
 
     /*Configure GPIO pin Output Level */
@@ -775,9 +776,9 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /*Configure GPIO pins : PRE_CHARGE_EN_Pin AIR_EN_Pin BMS_OK_Pin
-     * MCU_LATCH_RESET_Pin */
-    GPIO_InitStruct.Pin =
-        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin;
+       MCU_LATCH_RESET_Pin SPI2_NSS_Pin */
+    GPIO_InitStruct.Pin = PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin |
+                          MCU_LATCH_RESET_Pin | SPI2_NSS_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
