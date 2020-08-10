@@ -1,48 +1,74 @@
-#include <stdbool.h>
 #include <assert.h>
-#include <stm32f3xx.h>
+#include <stdlib.h>
 #include "Io_LTC6813.h"
-#include "main.h"
 #include "config/Io_LTC6813Configs.h"
 
-// TODO: May need to add a transmit receive command
-static uint16_t Io_CalculatePacketErrorCode(size_t num_of_bytes, uint8_t *data);
-void            Io_LTC6813_TransmitCommand(uint8_t command[2], uint8_t *rx_data);
+static uint16_t Io_CalculatePacketErrorCode(uint8_t *data, size_t num_of_bytes);
 
-void Io_LTC6813_TransmitCommand(uint8_t command[2], uint8_t *rx_data)
-{
-    // The packet of bytes to be transmitted to the LTC6813
-    uint8_t command_bytes[4];
+static void Io_TransmitCommand(
+    uint16_t        tx_command,
+    uint16_t        size_tx_command,
+    struct LTC6813 *ltc_6813);
 
-    // Every command written to the LTC6813 are sent in the following order:
-    // COMMAND0, COMMAND1, PEC0, PEC1
-    command_bytes[0]   = command[0];
-    command_bytes[1]   = command[1];
-    uint16_t pec_bytes = Io_CalculatePacketErrorCode(2U, command);
-    command_bytes[2]   = (uint8_t)(pec_bytes >> 8);
-    command_bytes[3]   = (uint8_t)(pec_bytes);
-
-    // TODO: Perform a spi transmit operation to send the command bytes to the
-    HAL_GPIO_WritePin(SPI2_NSS_GPIO_Port,SPI2_NSS_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(SPI2_NSS_GPIO_Port,SPI2_NSS_Pin, GPIO_PIN_SET);
-    // LTC6813 chip
-    UNUSED(command_bytes);
-}
+static void Io_TransmitCommandAndReceiveData(
+    uint16_t        tx_command,
+    uint8_t *       rx_data,
+    uint16_t        size_tx_command,
+    uint16_t        size_data_received,
+    struct LTC6813 *ltc_6813);
 
 static uint16_t
-    Io_CalculatePacketErrorCode(size_t num_of_bytes, uint8_t *const data)
+    Io_CalculatePacketErrorCode(uint8_t *const data, size_t num_of_bytes)
 {
     size_t   lut_index;
-    uint32_t pec = 16U;
+    uint16_t pec = 16U;
 
     for (size_t i = 0U; i < num_of_bytes; i++)
     {
         lut_index = ((pec >> 7) ^ data[i]) & 0xFF;
-        pec       = (pec << 8) ^ PEC_15_LUT[lut_index];
+        pec       = (uint16_t)((pec << 8) ^ PEC_15_LUT[lut_index]);
     }
 
     // Set the LSB of the pec to 0
     return (uint16_t)(pec << 1);
+}
+
+static void Io_TransmitCommand(
+    uint16_t              tx_command,
+    uint16_t              size_tx_command,
+    struct LTC6813 *const ltc_6813)
+{
+    uint8_t _tx_command[4];
+    _tx_command[0]           = (uint8_t)tx_command;
+    _tx_command[1]           = (uint8_t)(tx_command >> 8);
+    uint16_t _tx_command_pec = Io_CalculatePacketErrorCode(_tx_command, 2U);
+    _tx_command[2]           = (uint8_t)(_tx_command_pec >> 8);
+    _tx_command[3]           = (uint8_t)_tx_command_pec;
+
+    // TODO: Include Io_SharedSpi_TransmitOnly
+    UNUSED(size_tx_command);
+    UNUSED(ltc_6813);
+}
+
+static void Io_TransmitCommandAndReceiveData(
+    uint16_t        tx_command,
+    uint8_t *       rx_data,
+    uint16_t        size_tx_command,
+    uint16_t        size_data_received,
+    struct LTC6813 *ltc_6813)
+{
+    uint8_t _tx_command[4];
+    _tx_command[0]           = (uint8_t)tx_command;
+    _tx_command[1]           = (uint8_t)(tx_command >> 8);
+    uint16_t _tx_command_pec = Io_CalculatePacketErrorCode(_tx_command, 2U);
+    _tx_command[2]           = (uint8_t)(_tx_command_pec >> 8);
+    _tx_command[3]           = (uint8_t)(_tx_command_pec);
+
+    // TODO: Include the Io_SharedSpi_MultipleTransmitReceive
+    UNUSED(size_data_received);
+    UNUSED(size_tx_command);
+    UNUSED(rx_data);
+    UNUSED(ltc_6813);
 }
 
 enum LTC6813_CellVoltageRegisterGroup
@@ -59,46 +85,85 @@ enum LTC6813_CellVoltageRegisterGroup
 struct LTC6813
 {
     SPI_HandleTypeDef *hspi;
-    uint16_t           cell_voltages[NUM_OF_CELLS_PER_IC];
-    uint16_t           pec[LTC6813_NUM_OF_REGISTER_GROUPS];
+    uint16_t           cell_voltages[NUM_OF_CELLS_PER_LTC6813];
 };
 
-static struct LTC6813 ltc_6813;
-
-void Io_LT6813_Init(SPI_HandleTypeDef *hspi)
+struct LTC6813 *Io_LTC6813_Create(SPI_HandleTypeDef *hspi)
 {
     assert(hspi != NULL);
 
-    ltc_6813.hspi = hspi;
+    struct LTC6813 *ltc6813 = malloc(sizeof(struct LTC6813));
+    ltc6813->hspi           = hspi;
 
-    // Wake up the SPI device
+    return ltc6813;
 }
 
-void Io_LTC6813_StartCellADCConversion(void)
+void Io_LTC6813_StartCellADCConversion(struct LTC6813 *ltc_6813)
 {
-    // Pack ADCV command into the command format of the LTC6813
-    uint8_t command[2];
-    command[0] = (uint8_t)ADCV;
-    command[1] = (uint8_t)(ADCV >> 8);
+    Io_TransmitCommand(ADCV, NUM_OF_TX_BYTES_PER_LTC6813_CMD, ltc_6813);
 }
 
-bool Io_LTC6813_IsAdcReady(void)
+bool Io_LTC6813_IsAdcReady(struct LTC6813 *ltc_6813)
 {
-    uint8_t rx_data = 0xFF;
-    uint8_t command[2];
+    uint8_t rx_data;
+    Io_TransmitCommandAndReceiveData(
+        PLADC, &rx_data, NUM_OF_TX_BYTES_PER_LTC6813_CMD, 1U, ltc_6813);
 
-    command[0] = 0x07;
-    command[1] = 0x14;
-
-    return (rx_data == 0xFF);
+    return (rx_data > 0U);
 }
 
-void Io_LTC6813_ReadAllCellVoltages(uint8_t *rx_cell_voltages)
+void Io_LTC6813_Configure(struct LTC6813 *ltc_6813)
 {
-    uint16_t _command;
-    uint8_t  command[2];
+    static const uint8_t DEFAULT_CFG_REGISTER[4] = {
+        (uint8_t)(REFON << 2) + (uint8_t)(DTEN << 1) + ADCOPT,
+        (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD),
+        (uint8_t)((CELL_OVERVOLTAGE_THRESHOLD & 0xF) << 4) +
+            (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD >> 8),
+        (uint8_t)(CELL_OVERVOLTAGE_THRESHOLD >> 4)
+    };
 
-    const size_t BYTE_IN_REG = 6U;
+    // Set the command to be transmitted
+    uint8_t tx_command[4];
+    tx_command[0]           = (uint8_t)(WRCFG >> 8);
+    tx_command[1]           = (uint8_t)WRCFG;
+    uint16_t tx_command_pec = Io_CalculatePacketErrorCode(tx_command, 2U);
+    tx_command[2]           = (uint8_t)(tx_command_pec >> 8);
+    tx_command[3]           = (uint8_t)tx_command_pec;
+
+    uint8_t cfgra_data[TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813];
+
+    for (size_t current_ltc6813 = TOTAL_NUM_OF_LTC6813; current_ltc6813 > 0;
+         current_ltc6813--)
+    {
+        // The first payload data written is received by the last LTC6813 in the
+        // daisy chain
+        // The value 8 being the number of payload bytes
+        size_t cfgra_data_index =
+            current_ltc6813 *
+            (NUM_OF_BYTES_PER_LTC6813_REGISTER * NUM_OF_PEC_BYTES);
+
+        cfgra_data[cfgra_data_index]   = DEFAULT_CFG_REGISTER[0];
+        cfgra_data[++cfgra_data_index] = DEFAULT_CFG_REGISTER[1];
+        cfgra_data[++cfgra_data_index] = DEFAULT_CFG_REGISTER[2];
+        cfgra_data[++cfgra_data_index] = DEFAULT_CFG_REGISTER[3];
+        cfgra_data[++cfgra_data_index] = 0U;
+        cfgra_data[++cfgra_data_index] = 0U;
+
+        uint16_t payload_data_pec = Io_CalculatePacketErrorCode(
+            cfgra_data, TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813);
+        cfgra_data[cfgra_data_index] = (uint8_t)(payload_data_pec >> 8);
+        cfgra_data[cfgra_data_index] = (uint8_t)payload_data_pec;
+    }
+    // TODO: Consider creating a more general function for this
+    // HAL_SPI_Transmit for the commands used above
+    UNUSED(ltc_6813);
+}
+
+void Io_LTC6813_ReadAllCellVoltages(
+    uint8_t *             rx_cell_voltages,
+    struct LTC6813 *const ltc_6813)
+{
+    uint16_t tx_command;
 
     for (size_t cell_register_group = LTC6813_REGISTER_GROUP_A;
          cell_register_group < LTC6813_NUM_OF_REGISTER_GROUPS;
@@ -107,46 +172,42 @@ void Io_LTC6813_ReadAllCellVoltages(uint8_t *rx_cell_voltages)
         switch (cell_register_group)
         {
             case LTC6813_REGISTER_GROUP_A:
-                _command = RDCVA;
+                tx_command = RDCVA;
                 break;
             case LTC6813_REGISTER_GROUP_B:
-                _command = RDCVB;
+                tx_command = RDCVB;
                 break;
             case LTC6813_REGISTER_GROUP_C:
-                _command = RDCVC;
+                tx_command = RDCVC;
                 break;
             case LTC6813_REGISTER_GROUP_D:
-                _command = RDCVD;
+                tx_command = RDCVD;
                 break;
             case LTC6813_REGISTER_GROUP_E:
-                _command = RDCVE;
+                tx_command = RDCVE;
                 break;
             case LTC6813_REGISTER_GROUP_F:
-                _command = RDCVF;
+                tx_command = RDCVF;
                 break;
             default:
                 break;
         }
 
-        command[0] = (uint8_t)_command;
-        command[1] = (uint8_t)(_command >> 8);
+        Io_TransmitCommandAndReceiveData(
+            tx_command, rx_cell_voltages, NUM_OF_TX_BYTES_PER_LTC6813_CMD,
+            NUM_OF_BYTES_PER_LTC6813_REGISTER + NUM_OF_PEC_BYTES, ltc_6813);
 
-        // TODO: The transmit command in the future should have the pointer to
-        // rx_cell_voltages passed as a parameter (to read data back)
-        Io_TransmitCommand(command);
-
-        size_t pec_error = 0U;
-
-        for (size_t current_ic = 0U; current_ic < NUM_OF_ICS; current_ic++)
+        for (size_t current_ltc_6813 = 0U;
+             current_ltc_6813 < TOTAL_NUM_OF_LTC6813; current_ltc_6813++)
         {
-            size_t rx_cell_voltages_index = current_ic * NUM_OF_RX_BYTES;
-
+            size_t rx_cell_voltages_index = current_ltc_6813 * NUM_OF_RX_BYTES;
             for (size_t current_cell = 0U;
-                 current_cell < NUM_OF_CELLS_PER_REGISTER_GROUP; current_cell++)
+                 current_cell < NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP;
+                 current_cell++)
             {
-                ltc_6813.cell_voltages
+                ltc_6813->cell_voltages
                     [current_cell + ((cell_register_group - 1U) *
-                                     NUM_OF_CELLS_PER_REGISTER_GROUP)] =
+                                     NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP)] =
                     (uint16_t)(
                         (rx_cell_voltages[rx_cell_voltages_index] +
                          (rx_cell_voltages[rx_cell_voltages_index + 1] << 8)));
@@ -157,25 +218,16 @@ void Io_LTC6813_ReadAllCellVoltages(uint8_t *rx_cell_voltages)
                 rx_cell_voltages_index += 2;
             }
 
-            uint16_t rx_pec = (uint16_t)(
+            uint16_t pec_received = (uint16_t)(
                 (rx_cell_voltages[rx_cell_voltages_index] << 8) |
                 rx_cell_voltages[rx_cell_voltages_index + 1]);
-            uint16_t calculated_pec = Io_CalculatePacketErrorCode(
-                BYTE_IN_REG, &rx_cell_voltages[current_ic * NUM_OF_RX_BYTES]);
-
-            if (rx_pec != calculated_pec)
+            uint16_t pec_calculated = Io_CalculatePacketErrorCode(
+                &rx_cell_voltages[current_ltc_6813 * NUM_OF_RX_BYTES],
+                NUM_OF_BYTES_PER_LTC6813_REGISTER);
+            if (pec_received != pec_calculated)
             {
-                pec_error++;
-                ltc_6813.pec[cell_register_group] = true;
+                // Do something
             }
-            else
-            {
-                ltc_6813.pec[cell_register_group] = false;
-            }
-
-            // TODO: transfer the value of the pec error to a generic function
-            // which calls this function
-            UNUSED(pec_error);
         }
     }
 }

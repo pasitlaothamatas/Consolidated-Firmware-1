@@ -1,12 +1,39 @@
 #pragma once
 
-#define NUM_OF_ICS 1U
-#define NUM_OF_CELLS_PER_IC 18U
-#define NUM_OF_CELLS_PER_REGISTER_GROUP 3U
+#define TOTAL_NUM_OF_LTC6813 1U
+#define NUM_OF_CELLS_PER_LTC6813 18U
+#define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
+
+#define NUM_OF_TX_BYTES_PER_LTC6813_CMD 4U
+#define NUM_OF_BYTES_PER_LTC6813_REGISTER 6U
+#define NUM_OF_PEC_BYTES 2U
 
 // The number of bytes received from a read operation per device
 #define NUM_OF_RX_BYTES 8U
-#define CELL_VOLTAGE_DATA_SIZE NUM_OF_ICS *NUM_OF_RX_BYTES
+#define CELL_VOLTAGE_DATA_SIZE TOTAL_NUM_OF_LTC6813 *NUM_OF_RX_BYTES
+
+#define TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813                   \
+    (NUM_OF_BYTES_PER_LTC6813_REGISTER + NUM_OF_PEC_BYTES) * \
+        TOTAL_NUM_OF_LTC6813
+
+#define DCP_DISABLED 0U
+#define CELL_CH_ALL 0U
+
+// Setting the ADC conversion frequency
+#define MD_27KHZ_14KHZ 1U
+#define MD_7KHZ_3KHZ 2U
+
+// This is choosing what mode we are operating the ADC with
+#define ADCOPT MD_27KHZ_14KHZ
+#define REFON 0U
+#define DTEN 0U
+#define DCP DCP_DISABLED
+
+#define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
+#define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
+
+// Commands used to write to the Configuration Register groups
+static const uint16_t WRCFG = 0x01;
 
 // Commands used to read from the cell voltage register groups (A->F)
 static const uint16_t RDCVA = 0x0400;
@@ -16,19 +43,14 @@ static const uint16_t RDCVD = 0x0A00;
 static const uint16_t RDCVE = 0x0900;
 static const uint16_t RDCVF = 0x0B00;
 
-#define MD_7KHZ_3KHZ 2U
-
-#define CELL_CH_ALL 0U
-
-#define DCP_DISABLED 0U
-
 // Default commands used to start ADC Cell Voltage Measurements
 // When reading cell voltages, configure the ADC to operate in:
 // 1) Normal Mode (7kHz Mode or 3kHz Mode)
 // 2) Discharge (DCP bit) not enabled
 // 3) Select all cells for the ADC conversion
 static const uint16_t ADCV =
-    0x260 + (MD_7KHZ_3KHZ << 7) + (DCP_DISABLED << 4) + CELL_CH_ALL;
+    0x260 + (ADCOPT << 7) + (DCP_DISABLED << 4) + CELL_CH_ALL;
+static const uint16_t PLADC = 0x1407;
 
 // PEC15 look-up table
 static const uint16_t PEC_15_LUT[256] = {
