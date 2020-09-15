@@ -33,7 +33,7 @@
 #define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
 
 // Commands used to write to the Configuration Register groups
-static const uint16_t WRCFG = 0x01;
+static const uint16_t WRCFGA = 0x01;
 
 // Commands used to read from the cell voltage register groups (A->F)
 static const uint16_t RDCVA = 0x0400;
