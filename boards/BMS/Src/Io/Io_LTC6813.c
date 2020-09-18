@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Io_LTC6813.h"
-#include "config/Io_LTC6813Configs.h"
 #include "Io_SharedSpiDMA.h"
+#include "Io_SharedSpi.h"
+#include "config/Io_LTC6813Configs.h"
 
 struct LTC6813
 {
@@ -22,7 +24,7 @@ static void Io_TransmitCommandAndReceiveData(
     uint16_t        tx_command,
     uint8_t *       rx_data,
     uint16_t        size_tx_command,
-    uint16_t        size_data_received,
+    uint16_t        size_rx_data,
     struct LTC6813 *ltc_6813);
 
 static uint16_t Io_CalculatePec15(uint8_t *data, size_t size)
@@ -56,8 +58,7 @@ HAL_StatusTypeDef Io_LTC6813_BroadcastCommand(
     _tx_command[2]             = (uint8_t)(_tx_command_pec15 >> 8U);
     _tx_command[3]             = (uint8_t)_tx_command_pec15;
 
-    // TODO: create a callback function to reset the slave select signal
-    return Io_SharedSpiDMA_Transmit(
+    return Io_SharedSpi_Transmit(
         ltc_6813->hspi, ltc_6813->chip_select_port, ltc_6813->chip_select_pin,
         _tx_command, size);
 }
@@ -66,7 +67,7 @@ static void Io_TransmitCommandAndReceiveData(
     uint16_t        tx_command,
     uint8_t *       rx_data,
     uint16_t        size_tx_command,
-    uint16_t        size_data_received,
+    uint16_t        size_rx_data,
     struct LTC6813 *ltc_6813)
 {
     uint8_t _tx_command[4];
@@ -77,7 +78,7 @@ static void Io_TransmitCommandAndReceiveData(
     _tx_command[3]           = (uint8_t)(_tx_command_pec);
 
     // TODO: Include the Io_SharedSpi_MultipleTransmitReceive
-    UNUSED(size_data_received);
+    UNUSED(size_rx_data);
     UNUSED(size_tx_command);
     UNUSED(rx_data);
     UNUSED(ltc_6813);
@@ -101,7 +102,9 @@ struct LTC6813 *Io_LTC6813_Create(
 {
     assert(hspi != NULL);
 
-    struct LTC6813 *ltc_6813   = malloc(sizeof(struct LTC6813));
+    struct LTC6813 *ltc_6813 = malloc(sizeof(struct LTC6813));
+    assert(ltc_6813 != NULL);
+
     ltc_6813->hspi             = hspi;
     ltc_6813->chip_select_port = chip_select_port;
     ltc_6813->chip_select_pin  = chip_select_pin;
@@ -141,60 +144,49 @@ void Io_LTC6813_EndWakeUp(const struct LTC6813 *ltc6813)
 
 void Io_LTC6813_Configure(const struct LTC6813 *const ltc_6813)
 {
-    // Write to configuration register group A
-    uint8_t tx_cfga[4];
-    tx_cfga[0] = (uint8_t)(WRCFGA >> 8);
-    tx_cfga[1] = (uint8_t)WRCFGA;
+    // Commands used to write to the Configuration Register groups
+    static const uint16_t WRCFGA                = 0x01;
 
-    // Calculate the PEC15 and split the result into 2 bytes
-    uint16_t tx_cfga_pec15 = Io_CalculatePec15(tx_cfga, 2U);
-    tx_cfga[2]             = (uint8_t)(tx_cfga_pec15 >> 8);
-    tx_cfga[3]             = (uint8_t)tx_cfga_pec15;
-
-    // Payload data packets used to configure the LTC6813
-    uint8_t              tx_cfgra[TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813];
-    static const uint8_t DEFAULT_CFG_REGISTER[4] = {
+    // TODO: PEC15 should already be computed and included in this array
+    static uint8_t        DEFAULT_CONFIG_REG[8] = {
         (uint8_t)(REFON << 2) + (uint8_t)(DTEN << 1) + ADCOPT,
         (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD),
         (uint8_t)((CELL_OVERVOLTAGE_THRESHOLD & 0xF) << 4) +
             (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD >> 8),
-        (uint8_t)(CELL_OVERVOLTAGE_THRESHOLD >> 4)
+        (uint8_t)(CELL_OVERVOLTAGE_THRESHOLD >> 4),
+        0,
+        0,
+        0,
+        0
     };
 
-    for (size_t current_ltc6813 = TOTAL_NUM_OF_LTC6813; current_ltc6813 > 0;
-         current_ltc6813--)
+    // Write to configuration register group A
+    uint8_t tx_cmd[NUM_CMD_BYTES];
+    tx_cmd[0] = (uint8_t)(WRCFGA >> 8);
+    tx_cmd[1] = (uint8_t)WRCFGA;
+
+    // Calculate the PEC15 and split the result into 2 bytes
+    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2U);
+    tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8U);
+    tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
+
+    uint16_t tx_write_cmd_pec15 = Io_CalculatePec15(DEFAULT_CONFIG_REG, 6U);
+    DEFAULT_CONFIG_REG[6]       = (uint8_t)(tx_write_cmd_pec15 >> 8U);
+    DEFAULT_CONFIG_REG[7]       = (uint8_t)tx_write_cmd_pec15;
+
+    uint8_t tx_write_cmd[NUM_CMD_BYTES + TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813];
+    memcpy(tx_write_cmd, tx_cmd, NUM_CMD_BYTES * sizeof(uint8_t));
+
+    for (size_t i = 0U; i < TOTAL_NUM_OF_LTC6813; i++)
     {
-        // The first payload data sent is received by the last LTC6813 in the
-        // daisy chain. The bottom 6 bytes for the payload must be configured
-        // before computing the PEC15 calculation.
-        size_t tx_cfgra_index =
-            current_ltc6813 * (NUM_OF_BYTES_PER_LTC6813_REGISTER - 1U);
-
-        tx_cfgra[tx_cfgra_index]   = 0U;
-        tx_cfgra[--tx_cfgra_index] = 0U;
-        tx_cfgra[--tx_cfgra_index] = DEFAULT_CFG_REGISTER[3];
-        tx_cfgra[--tx_cfgra_index] = DEFAULT_CFG_REGISTER[2];
-        tx_cfgra[--tx_cfgra_index] = DEFAULT_CFG_REGISTER[1];
-        tx_cfgra[--tx_cfgra_index] = DEFAULT_CFG_REGISTER[0];
-
-        // Calculate the PEC15 and split the result into 2 bytes
-        uint16_t tx_cfgra_pec15 =
-            Io_CalculatePec15(tx_cfgra, NUM_OF_BYTES_PER_LTC6813_REGISTER);
-
-        // Fill the top two bytes of the payload data with the calculated PEC15
-        tx_cfgra[tx_cfgra_index + 7] = (uint8_t)(tx_cfgra_pec15 >> 8);
-        tx_cfgra[++tx_cfgra_index]   = (uint8_t)tx_cfgra_pec15;
+        memcpy(
+            &tx_write_cmd[NUM_CMD_BYTES + i * 8], DEFAULT_CONFIG_REG, 8 * sizeof(uint8_t));
     }
 
     HAL_GPIO_WritePin(
         ltc_6813->chip_select_port, ltc_6813->chip_select_pin, GPIO_PIN_RESET);
-    // TODO: combine both messages into one message and use Io_SharedDMA to send
-    // the message
-    HAL_SPI_Transmit(ltc_6813->hspi, tx_cfga, 4U, 100U);
-    HAL_SPI_Transmit(
-        ltc_6813->hspi, tx_cfgra, 8U * NUM_OF_CELLS_PER_LTC6813, 100U);
-    HAL_GPIO_WritePin(
-        ltc_6813->chip_select_port, ltc_6813->chip_select_pin, GPIO_PIN_SET);
+    HAL_SPI_Transmit_DMA(
+        ltc_6813->hspi, tx_write_cmd, 4 * TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813);
 }
 
 void Io_LTC6813_ReadAllCellVoltages(

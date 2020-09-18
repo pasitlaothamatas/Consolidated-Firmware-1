@@ -1,6 +1,6 @@
 #pragma once
 
-#define TOTAL_NUM_OF_LTC6813 1U
+#define TOTAL_NUM_OF_LTC6813 6U
 #define NUM_OF_CELLS_PER_LTC6813 18U
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
 
@@ -8,6 +8,7 @@
 #define NUM_OF_BYTES_PER_LTC6813_REGISTER 6U
 #define NUM_OF_PEC_BYTES 2U
 
+#define NUM_CMD_BYTES 4U
 // The number of bytes received from a read operation per device
 #define NUM_OF_RX_BYTES 8U
 #define CELL_VOLTAGE_DATA_SIZE TOTAL_NUM_OF_LTC6813 *NUM_OF_RX_BYTES
@@ -31,9 +32,6 @@
 
 #define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
 #define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
-
-// Commands used to write to the Configuration Register groups
-static const uint16_t WRCFGA = 0x01;
 
 // Commands used to read from the cell voltage register groups (A->F)
 static const uint16_t RDCVA = 0x0400;
