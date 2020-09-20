@@ -1,21 +1,22 @@
 #pragma once
 
-#define TOTAL_NUM_OF_LTC6813 6U
+#define TOTAL_NUM_OF_LTC6813_IC 6U
 #define NUM_OF_CELLS_PER_LTC6813 18U
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
 
 #define NUM_OF_TX_BYTES_PER_LTC6813_CMD 4U
 #define NUM_OF_BYTES_PER_LTC6813_REGISTER 6U
 #define NUM_OF_PEC_BYTES 2U
+#define NUM_CELLS_PER_REGISTER_GROUP 3U
 
 #define NUM_CMD_BYTES 4U
 // The number of bytes received from a read operation per device
 #define NUM_OF_RX_BYTES 8U
-#define CELL_VOLTAGE_DATA_SIZE TOTAL_NUM_OF_LTC6813 *NUM_OF_RX_BYTES
+#define CELL_VOLTAGE_DATA_SIZE TOTAL_NUM_OF_LTC6813_IC *NUM_OF_RX_BYTES
 
 #define TOTAL_NUM_OF_PAYLOAD_BYTES_LTC6813                   \
     (NUM_OF_BYTES_PER_LTC6813_REGISTER + NUM_OF_PEC_BYTES) * \
-        TOTAL_NUM_OF_LTC6813
+        TOTAL_NUM_OF_LTC6813_IC
 
 #define DCP_DISABLED 0U
 #define CELL_CH_ALL 0U
@@ -40,15 +41,6 @@ static const uint16_t RDCVC = 0x0800;
 static const uint16_t RDCVD = 0x0A00;
 static const uint16_t RDCVE = 0x0900;
 static const uint16_t RDCVF = 0x0B00;
-
-// Default commands used to start ADC Cell Voltage Measurements
-// When reading cell voltages, configure the ADC to operate in:
-// 1) Normal Mode (7kHz Mode or 3kHz Mode)
-// 2) Discharge (DCP bit) not enabled
-// 3) Select all cells for the ADC conversion
-static const uint16_t ADCV =
-    0x260 + (ADCOPT << 7) + (DCP_DISABLED << 4) + CELL_CH_ALL;
-static const uint16_t PLADC = 0x1407;
 
 // PEC15 look-up table
 static const uint16_t PEC_15_LUT[256] = {
