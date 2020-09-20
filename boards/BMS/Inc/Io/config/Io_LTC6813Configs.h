@@ -34,14 +34,6 @@
 #define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
 #define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
 
-// Commands used to read from the cell voltage register groups (A->F)
-static const uint16_t RDCVA = 0x0400;
-static const uint16_t RDCVB = 0x0600;
-static const uint16_t RDCVC = 0x0800;
-static const uint16_t RDCVD = 0x0A00;
-static const uint16_t RDCVE = 0x0900;
-static const uint16_t RDCVF = 0x0B00;
-
 // PEC15 look-up table
 static const uint16_t PEC_15_LUT[256] = {
     0x0,    0xC599, 0xCEAB, 0xB32,  0xD8CF, 0x1D56, 0x1664, 0xD3FD, 0xF407,

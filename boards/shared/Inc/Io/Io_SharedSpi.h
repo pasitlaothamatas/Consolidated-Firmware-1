@@ -4,8 +4,8 @@
 
 HAL_StatusTypeDef Io_SharedSpi_TransmitAndReceive(
     SPI_HandleTypeDef *hspi,
-    GPIO_TypeDef *     chip_select_port,
-    uint16_t           chip_select_pin,
+    GPIO_TypeDef *     nss_port,
+    uint16_t           nss_pin,
     uint8_t *          tx_data,
     uint16_t           tx_size,
     uint8_t *          rx_data,

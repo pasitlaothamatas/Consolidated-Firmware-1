@@ -6,7 +6,13 @@
 
 struct Ltc6813;
 
-void Io_LTC6813_Create(
+typedef enum
+{
+    PEC15_MISMATCH_ERROR,
+    PEC15_OK
+} PEC15Codes;
+
+void Io_LTC6813_Init(
     SPI_HandleTypeDef *hspi,
     GPIO_TypeDef *     chip_select_port,
     uint16_t           chip_select_pin);

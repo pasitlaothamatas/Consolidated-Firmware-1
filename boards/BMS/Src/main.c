@@ -38,6 +38,7 @@
 #include "Io_RgbLedSequence.h"
 #include "Io_Charger.h"
 #include "Io_OkStatuses.h"
+#include "Io_LTC6813.h"
 
 #include "App_BmsWorld.h"
 #include "App_SharedStateMachine.h"
@@ -220,6 +221,8 @@ int main(void)
     bspd_ok = App_OkStatus_Create(
         Io_OkStatuses_EnableBspdOk, Io_OkStatuses_DisableBspdOk,
         Io_OkStatuses_IsBspdOkEnabled);
+
+    Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
 
     clock = App_SharedClock_Create();
 
