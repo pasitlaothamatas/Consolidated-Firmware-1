@@ -65,27 +65,6 @@ static uint16_t Io_CalculatePec15(uint8_t *data, size_t size)
     return (uint16_t)(pec15 << 1);
 }
 
-static HAL_StatusTypeDef
-    Io_LTC6813_BroadcastCommand(uint16_t tx_cmd, uint16_t size);
-
-static HAL_StatusTypeDef
-    Io_LTC6813_BroadcastCommand(uint16_t tx_cmd, uint16_t size)
-{
-    uint8_t _tx_cmd[4];
-
-    // Split tx_cmd into two bytes
-    _tx_cmd[0] = (uint8_t)(tx_cmd >> 8);
-    _tx_cmd[1] = (uint8_t)tx_cmd;
-
-    // Calculate the PEC15 and split the command into two bytes
-    uint16_t _tx_cmd_pec15 = Io_CalculatePec15(_tx_cmd, 2);
-    _tx_cmd[2]             = (uint8_t)(_tx_cmd_pec15 >> 8);
-    _tx_cmd[3]             = (uint8_t)_tx_cmd_pec15;
-
-    return Io_SharedSpi_Transmit(
-        ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, _tx_cmd, size);
-}
-
 void Io_LTC6813_Init(
     SPI_HandleTypeDef *hspi,
     GPIO_TypeDef *     nss_port,
@@ -152,21 +131,36 @@ void Io_LTC6813_Configure(void)
     ltc_6813.is_adc_polling = true;
 }
 
-void Io_LTC6813_StartADCConversion(void)
+ExitCode Io_LTC6813_StartADCConversion(void)
 {
     const uint16_t ADCV =
         0x260 + (ADCOPT << 7) + (DCP_DISABLED << 4) + CELL_CH_ALL;
 
+    uint8_t tx_cmd[4];
+    tx_cmd[0] = (uint8_t)(ADCV >> 8);
+    tx_cmd[1] = (uint8_t)ADCV;
+
+    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2U);
+    tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
+    tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
+
     // Have the size be 4 bytes. This is the standard # of bytes used to
     // transfer a command
-    Io_LTC6813_BroadcastCommand(ADCV, 4U);
+    if (Io_SharedSpi_Transmit(
+            ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U) !=
+        HAL_OK)
+    {
+        return EXIT_CODE_UNIMPLEMENTED;
+    }
+
+    return EXIT_CODE_OK;
 }
 
-bool Io_LTC6813_IsAdcConversionComplete(void)
+static void Io_LTC6813_IsAdcConversionComplete(void);
+static void Io_LTC6813_IsAdcConversionComplete(void)
 {
     const uint16_t PLADC = 0x1407;
 
-    uint8_t rx_data;
     uint8_t tx_cmd[4];
 
     tx_cmd[0] = (uint8_t)PLADC;
@@ -176,17 +170,15 @@ bool Io_LTC6813_IsAdcConversionComplete(void)
     tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
     tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
 
-    Io_SharedSpi_TransmitAndReceive(
-        ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U,
-        &rx_data, 1U);
+    HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(ltc_6813.hspi, tx_cmd, 4U, 100U);
 
-    if (rx_data > 0U)
+    uint8_t rx_data = 0U;
+    while (rx_data == 0U)
     {
-        ltc_6813.is_adc_polling = false;
-        return true;
+        HAL_SPI_Receive(ltc_6813.hspi, &rx_data, 1U, 100U);
     }
-
-    return false;
+    HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_SET);
 }
 
 bool Io_LTC6813_ParseCellsAndPerformPec15Check(
@@ -251,7 +243,7 @@ PEC15Codes Io_LTC6813_ReadAllCellRegisterGroups(void)
         tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
         tx_cmd[3]             = (uint8_t)(tx_cmd_pec15);
 
-        // 8U represents the reg length value
+        Io_LTC6813_IsAdcConversionComplete();
         Io_SharedSpi_TransmitAndReceive(
             ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U,
             rx_cell_voltages, NUM_OF_RX_BYTES * TOTAL_NUM_OF_LTC6813_IC);
