@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stm32f3xx.h>
+#include <stm32f3xx_hal.h>
 #include <stdbool.h>
 #include "App_SharedExitCode.h"
 

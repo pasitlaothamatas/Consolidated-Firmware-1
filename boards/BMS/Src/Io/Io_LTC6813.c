@@ -22,7 +22,6 @@ struct Ltc6813
     SPI_HandleTypeDef *hspi;
     GPIO_TypeDef *     nss_port;
     uint16_t           nss_pin;
-    bool               is_adc_polling;
     bool               is_awake;
 
     uint16_t cell_voltages[NUM_OF_CELLS_PER_LTC6813][TOTAL_NUM_OF_LTC6813_IC];
@@ -75,7 +74,6 @@ void Io_LTC6813_Init(
     ltc_6813.hspi           = hspi;
     ltc_6813.nss_port       = nss_port;
     ltc_6813.nss_pin        = nss_pin;
-    ltc_6813.is_adc_polling = false;
     ltc_6813.is_awake       = false;
 }
 
@@ -127,8 +125,6 @@ void Io_LTC6813_Configure(void)
         HAL_SPI_Transmit(ltc_6813.hspi, tx_payload, 8U, 100U);
     }
     HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_SET);
-
-    ltc_6813.is_adc_polling = true;
 }
 
 ExitCode Io_LTC6813_StartADCConversion(void)
@@ -156,8 +152,8 @@ ExitCode Io_LTC6813_StartADCConversion(void)
     return EXIT_CODE_OK;
 }
 
-static void Io_LTC6813_IsAdcConversionComplete(void);
-static void Io_LTC6813_IsAdcConversionComplete(void)
+static void Io_LTC6813_PollAdcConversion(void);
+static void Io_LTC6813_PollAdcConversion(void)
 {
     const uint16_t PLADC = 0x1407;
 
@@ -181,12 +177,12 @@ static void Io_LTC6813_IsAdcConversionComplete(void)
     HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_SET);
 }
 
-bool Io_LTC6813_ParseCellsAndPerformPec15Check(
+static bool Io_LTC6813_ParseCellsAndPerformPec15Check(
     size_t   current_ic,
     size_t   current_register_group,
     uint8_t *rx_cell_voltages);
 
-bool Io_LTC6813_ParseCellsAndPerformPec15Check(
+static bool Io_LTC6813_ParseCellsAndPerformPec15Check(
     size_t   current_ic,
     size_t   current_register_group,
     uint8_t *rx_cell_voltages)
@@ -243,7 +239,7 @@ PEC15Codes Io_LTC6813_ReadAllCellRegisterGroups(void)
         tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
         tx_cmd[3]             = (uint8_t)(tx_cmd_pec15);
 
-        Io_LTC6813_IsAdcConversionComplete();
+        Io_LTC6813_PollAdcConversion();
         Io_SharedSpi_TransmitAndReceive(
             ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U,
             rx_cell_voltages, NUM_OF_RX_BYTES * TOTAL_NUM_OF_LTC6813_IC);
