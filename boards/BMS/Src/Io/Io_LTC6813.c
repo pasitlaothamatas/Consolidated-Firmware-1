@@ -87,6 +87,11 @@ void Io_LTC6813_EndWakeUp(void)
     HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_SET);
 }
 
+bool Io_LTC6813_IsAwake(void)
+{
+    return ltc_6813.is_awake;
+}
+
 void Io_LTC6813_Configure(void)
 {
     // Commands used to write to the Configuration Register groups

@@ -42,6 +42,7 @@
 
 #include "App_BmsWorld.h"
 #include "App_SharedStateMachine.h"
+#include "App_CellMonitoringSignals.h"
 #include "states/App_InitState.h"
 #include "configs/App_HeartbeatMonitorConfig.h"
 #include "configs/App_ImdConfig.h"
@@ -224,7 +225,7 @@ int main(void)
         Io_OkStatuses_IsBspdOkEnabled);
 
     Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
-    cell_monitoring = App_CellMonitoring_Create(
+    cell_monitoring = App_CellMonitoring_Create(Io_LTC6813_IsAwake, Io_LTC6813_StartWakeUp, Io_LTC6813_EndWakeUp,
         Io_LTC6813_Configure, Io_LTC6813_StartADCConversion,
         Io_LTC6813_ReadAllCellRegisterGroups, Io_LTC6813_GetCellVoltages);
 
@@ -232,7 +233,9 @@ int main(void)
 
     world = App_BmsWorld_Create(
         can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-        bms_ok, imd_ok, bspd_ok, clock);
+        bms_ok, imd_ok, bspd_ok, cell_monitoring, clock,
+
+        App_CellMonitoringSignal_IsAsleep, App_CellMonitoringSignal_Callback);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);

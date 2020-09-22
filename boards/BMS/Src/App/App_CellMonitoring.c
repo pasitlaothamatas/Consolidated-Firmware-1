@@ -11,6 +11,9 @@ struct CellMonitoring
     uint16_t *cell_voltages;
     bool      is_adc_awake;
 
+    bool (*is_awake)(void);
+    void (*start_wakeup)(void);
+    void (*end_wakeup)(void);
     void (*configure_ic)(void);
     ExitCode (*start_adc_conversion)(void);
     PEC15Codes (*read_register_groups)(void);
@@ -18,6 +21,9 @@ struct CellMonitoring
 };
 
 struct CellMonitoring *App_CellMonitoring_Create(
+    bool (*is_awake)(void),
+    void (*start_wakeup)(void),
+    void (*end_wakeup)(void),
     void (*configure_ic)(void),
     ExitCode (*start_adc_conversion)(void),
     PEC15Codes (*read_register_groups)(void),
@@ -27,6 +33,9 @@ struct CellMonitoring *App_CellMonitoring_Create(
         malloc(sizeof(struct CellMonitoring));
     assert(cell_monitoring != NULL);
 
+    cell_monitoring->is_awake             = is_awake;
+    cell_monitoring->start_wakeup         = start_wakeup;
+    cell_monitoring->end_wakeup           = end_wakeup;
     cell_monitoring->cell_voltages        = NULL;
     cell_monitoring->configure_ic         = configure_ic;
     cell_monitoring->start_adc_conversion = start_adc_conversion;
@@ -71,4 +80,22 @@ uint16_t *App_CellMonitoring_GetCellVoltages(
     size_t                 ic)
 {
     return &(cell_monitoring->cell_voltages[ic]);
+}
+
+void App_CellMonitoring_StartWakeUp(
+    const struct CellMonitoring *const cell_monitoring)
+{
+    cell_monitoring->start_wakeup();
+}
+
+void App_CellMonitoring_EndWakeUp(
+    const struct CellMonitoring *const cell_monitoring)
+{
+    cell_monitoring->end_wakeup();
+}
+
+bool App_CellMonitoring_IsAwake(
+    const struct CellMonitoring *const cell_monitoring)
+{
+    return cell_monitoring->is_awake();
 }

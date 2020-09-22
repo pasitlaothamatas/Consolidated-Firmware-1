@@ -17,6 +17,12 @@ void Io_LTC6813_Init(
     GPIO_TypeDef *     chip_select_port,
     uint16_t           chip_select_pin);
 
+bool Io_LTC6813_IsAwake(void);
+
+void Io_LTC6813_StartWakeUp(void);
+
+void Io_LTC6813_EndWakeUp(void);
+
 void Io_LTC6813_Configure(void);
 
 ExitCode Io_LTC6813_StartADCConversion(void);
