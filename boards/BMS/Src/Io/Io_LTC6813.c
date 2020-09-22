@@ -24,7 +24,7 @@ struct Ltc6813
     uint16_t           nss_pin;
     bool               is_awake;
 
-    uint16_t cell_voltages[NUM_OF_CELLS_PER_LTC6813][TOTAL_NUM_OF_LTC6813_IC];
+    uint16_t cell_voltages[TOTAL_NUM_OF_LTC6813_IC][NUM_OF_CELLS_PER_LTC6813];
 };
 
 struct CommandLookupTable
@@ -71,10 +71,10 @@ void Io_LTC6813_Init(
 {
     assert(hspi != NULL);
 
-    ltc_6813.hspi           = hspi;
-    ltc_6813.nss_port       = nss_port;
-    ltc_6813.nss_pin        = nss_pin;
-    ltc_6813.is_awake       = false;
+    ltc_6813.hspi     = hspi;
+    ltc_6813.nss_port = nss_port;
+    ltc_6813.nss_pin  = nss_pin;
+    ltc_6813.is_awake = false;
 }
 
 void Io_LTC6813_StartWakeUp(void)

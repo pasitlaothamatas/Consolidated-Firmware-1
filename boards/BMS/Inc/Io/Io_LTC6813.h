@@ -18,3 +18,9 @@ void Io_LTC6813_Init(
     uint16_t           chip_select_pin);
 
 void Io_LTC6813_Configure(void);
+
+ExitCode Io_LTC6813_StartADCConversion(void);
+
+PEC15Codes Io_LTC6813_ReadAllCellRegisterGroups(void);
+
+uint16_t *Io_LTC6813_GetCellVoltages(void);

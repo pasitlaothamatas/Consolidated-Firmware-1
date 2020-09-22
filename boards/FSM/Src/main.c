@@ -1,3 +1,247 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                             www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "cmsis_os.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <assert.h>
+
+#include "Io_CanTx.h"
+#include "Io_CanRx.h"
+#include "Io_SharedSoftwareWatchdog.h"
+#include "Io_SharedCan.h"
+#include "Io_SharedHardFaultHandler.h"
+#include "Io_StackWaterMark.h"
+#include "Io_SoftwareWatchdog.h"
+#include "Io_FlowMeters.h"
+#include "Io_HeartbeatMonitor.h"
+#include "Io_RgbLedSequence.h"
+#include "Io_WheelSpeedSensors.h"
+#include "Io_SteeringAngleSensor.h"
+#include "Io_MSP3002K5P3N1.h"
+#include "Io_Adc.h"
+#include "Io_AcceleratorPedals.h"
+#include "Io_Brake.h"
+#include "Io_PrimaryScancon2RMHF.h"
+#include "Io_SecondaryScancon2RMHF.h"
+
+#include "App_FsmWorld.h"
+#include "App_SharedStateMachine.h"
+#include "App_AcceleratorPedalSignals.h"
+#include "states/App_AirOpenState.h"
+#include "configs/App_HeartbeatMonitorConfig.h"
+#include "configs/App_FlowRateThresholds.h"
+#include "configs/App_WheelSpeedThresholds.h"
+#include "configs/App_SteeringAngleThresholds.h"
+#include "configs/App_BrakePressureThresholds.h"
+#include "configs/App_AcceleratorPedalThresholds.h"
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc2;
+DMA_HandleTypeDef hdma_adc2;
+
+CAN_HandleTypeDef hcan;
+
+IWDG_HandleTypeDef hiwdg;
+
+TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim16;
+TIM_HandleTypeDef htim17;
+
+osThreadId          Task1HzHandle;
+uint32_t            Task1HzBuffer[TASK1HZ_STACK_SIZE];
+osStaticThreadDef_t Task1HzControlBlock;
+osThreadId          Task1kHzHandle;
+uint32_t            Task1kHzBuffer[TASK1KHZ_STACK_SIZE];
+osStaticThreadDef_t Task1kHzControlBlock;
+osThreadId          TaskCanRxHandle;
+uint32_t            TaskCanRxBuffer[TASKCANRX_STACK_SIZE];
+osStaticThreadDef_t TaskCanRxControlBlock;
+osThreadId          TaskCanTxHandle;
+uint32_t            TaskCanTxBuffer[TASKCANTX_STACK_SIZE];
+osStaticThreadDef_t TaskCanTxControlBlock;
+osThreadId          Task100HzHandle;
+uint32_t            Task100HzBuffer[TASK100HZ_STACK_SIZE];
+osStaticThreadDef_t Task100HzControlBlock;
+/* USER CODE BEGIN PV */
+struct InRangeCheck *primary_flow_meter_in_range_check,
+    *secondary_flow_meter_in_range_check;
+struct InRangeCheck *left_wheel_speed_sensor_in_range_check,
+    *right_wheel_speed_sensor_in_range_check;
+struct InRangeCheck *     steering_angle_sensor_in_range_check;
+struct Brake *            brake;
+struct World *            world;
+struct StateMachine *     state_machine;
+struct FsmCanTxInterface *can_tx;
+struct FsmCanRxInterface *can_rx;
+struct HeartbeatMonitor * heartbeat_monitor;
+struct RgbLedSequence *   rgb_led_sequence;
+struct Clock *            clock;
+struct AcceleratorPedals *papps_and_sapps;
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void        SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_CAN_Init(void);
+static void MX_IWDG_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_TIM1_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_TIM16_Init(void);
+static void MX_TIM17_Init(void);
+void        RunTask1Hz(void const *argument);
+void        RunTask1kHz(void const *argument);
+void        RunTaskCanRx(void const *argument);
+void        RunTaskCanTx(void const *argument);
+void        RunTask100Hz(void const *argument);
+
+/* USER CODE BEGIN PFP */
+
+static void CanRxQueueOverflowCallBack(size_t overflow_count);
+static void CanTxQueueOverflowCallBack(size_t overflow_count);
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+static void CanRxQueueOverflowCallBack(size_t overflow_count)
+{
+    App_CanTx_SetPeriodicSignal_RX_OVERFLOW_COUNT(can_tx, overflow_count);
+}
+
+static void CanTxQueueOverflowCallBack(size_t overflow_count)
+{
+    App_CanTx_SetPeriodicSignal_TX_OVERFLOW_COUNT(can_tx, overflow_count);
+}
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void)
+{
+    /* USER CODE BEGIN 1 */
+
+    /* USER CODE END 1 */
+
+    /* MCU
+     * Configuration--------------------------------------------------------*/
+
+    /* Reset of all peripherals, Initializes the Flash interface and the
+     * Systick. */
+    HAL_Init();
+
+    /* USER CODE BEGIN Init */
+
+    /* USER CODE END Init */
+
+    /* Configure the system clock */
+    SystemClock_Config();
+
+    /* USER CODE BEGIN SysInit */
+
+    /* USER CODE END SysInit */
+
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_DMA_Init();
+    MX_CAN_Init();
+    MX_IWDG_Init();
+    MX_ADC2_Init();
+    MX_TIM4_Init();
+    MX_TIM1_Init();
+    MX_TIM2_Init();
+    MX_TIM3_Init();
+    MX_TIM16_Init();
+    MX_TIM17_Init();
+    /* USER CODE BEGIN 2 */
+    __HAL_DBGMCU_FREEZE_IWDG();
+
+    HAL_ADC_Start_DMA(
+        &hadc2, (uint32_t *)Io_Adc_GetRawAdcValues(),
+        hadc2.Init.NbrOfConversion);
+    HAL_TIM_Base_Start(&htim3);
+
+    Io_SharedHardFaultHandler_Init();
+
+    Io_FlowMeters_Init(&htim4);
+    primary_flow_meter_in_range_check = App_InRangeCheck_Create(
+        Io_FlowMeters_GetPrimaryFlowRate, MIN_PRIMARY_FLOW_RATE_L_PER_MIN,
+        MAX_PRIMARY_FLOW_RATE_L_PER_MIN);
+    secondary_flow_meter_in_range_check = App_InRangeCheck_Create(
+        Io_FlowMeters_GetSecondaryFlowRate, MIN_SECONDARY_FLOW_RATE_L_PER_MIN,
+        MAX_SECONDARY_FLOW_RATE_L_PER_MIN);
+
+    Io_WheelSpeedSensors_Init(&htim16, &htim17);
+    left_wheel_speed_sensor_in_range_check = App_InRangeCheck_Create(
+        Io_WheelSpeedSensors_GetLeftSpeedKph, MIN_LEFT_WHEEL_SPEED_KPH,
+        MAX_LEFT_WHEEL_SPEED_KPH);
+    right_wheel_speed_sensor_in_range_check = App_InRangeCheck_Create(
+        Io_WheelSpeedSensors_GetRightSpeedKph, MIN_RIGHT_WHEEL_SPEED_KPH,
+        MAX_RIGHT_WHEEL_SPEED_KPH);
+
+    steering_angle_sensor_in_range_check = App_InRangeCheck_Create(
+        Io_SteeringAngleSensor_GetAngleDegree, MIN_STEERING_ANGLE_DEG,
+        MAX_STEERING_ANGLE_DEG);
+
+    brake = App_Brake_Create(
+        Io_MSP3002K5P3N1_GetPressurePsi, Io_MSP3002K5P3N1_IsOpenOrShortCircuit,
+        Io_Brake_IsActuated, MIN_BRAKE_PRESSURE_PSI, MAX_BRAKE_PRESSURE_PSI);
+
+    can_tx = App_CanTx_Create(
+        Io_CanTx_EnqueueNonPeriodicMsg_FSM_STARTUP,
+        Io_CanTx_EnqueueNonPeriodicMsg_FSM_WATCHDOG_TIMEOUT,
+        Io_CanTx_EnqueueNonPeriodicMsg_FSM_AIR_SHUTDOWN);
+
+    can_rx            = App_CanRx_Create();
+    heartbeat_monitor = App_SharedHeartbeatMonitor_Create(
+        Io_HeartbeatMonitor_GetCurrentMs, HEARTBEAT_MONITOR_TIMEOUT_PERIOD_MS,
         HEARTBEAT_MONITOR_BOARDS_TO_CHECK, Io_HeartbeatMonitor_TimeoutCallback);
 
     rgb_led_sequence = App_SharedRgbLedSequence_Create(
@@ -6,11 +250,17 @@
 
     clock = App_SharedClock_Create();
 
-    papps = App_AcceleratorPedal_Create(
-        Io_AcceleratorPedals_IsPappsEncoderAlarmActive);
+    Io_PrimaryScancon2RMHF_Init(&htim1);
+    Io_SecondaryScancon2RMHF_Init(&htim2);
 
-    sapps = App_AcceleratorPedal_Create(
-        Io_AcceleratorPedals_IsSappsEncoderAlarmActive);
+    papps_and_sapps = App_AcceleratorPedals_Create(
+        Io_AcceleratorPedals_IsPappsEncoderAlarmActive,
+        Io_AcceleratorPedals_IsSappsEncoderAlarmActive,
+        Io_PrimaryScancon2RMHF_GetEncoderCounter,
+        Io_SecondaryScancon2RMHF_GetEncoderCounter,
+        Io_PrimaryScancon2RMHF_ResetEncoderCounter,
+        Io_SecondaryScancon2RMHF_ResetEncoderCounter,
+        PAPPS_ENCODER_FULLY_PRESSED_VALUE, SAPPS_ENCODER_FULLY_PRESSED_VALUE);
 
     world = App_FsmWorld_Create(
         can_tx, can_rx, heartbeat_monitor, primary_flow_meter_in_range_check,
@@ -18,10 +268,19 @@
         left_wheel_speed_sensor_in_range_check,
         right_wheel_speed_sensor_in_range_check,
         steering_angle_sensor_in_range_check, brake, rgb_led_sequence, clock,
-        papps, App_AcceleratorPedalSignals_IsPappsAlarmActive,
-        App_AcceleratorPedalSignals_PappsAlarmCallback, sapps,
+        papps_and_sapps,
+
+        App_AcceleratorPedalSignals_HasAppsAndBrakePlausibilityFailure,
+        App_AcceleratorPedalSignals_IsAppsAndBrakePlausibilityOk,
+        App_AcceleratorPedalSignals_AppsAndBrakePlausibilityFailureCallback,
+        App_AcceleratorPedalSignals_HasAppsDisagreement,
+        App_AcceleratorPedalSignals_HasAppsAgreement,
+        App_AcceleratorPedalSignals_AppsDisagreementCallback,
+        App_AcceleratorPedalSignals_IsPappsAlarmActive,
+        App_AcceleratorPedalSignals_PappsAlarmCallback,
         App_AcceleratorPedalSignals_IsSappsAlarmActive,
-        App_AcceleratorPedalSignals_SappsAlarmCallback);
+        App_AcceleratorPedalSignals_SappsAlarmCallback,
+        App_AcceleratorPedalSignals_IsPappsAndSappsAlarmInactive);
 
     state_machine = App_SharedStateMachine_Create(world, App_GetAirOpenState());
 
@@ -140,8 +399,10 @@ void SystemClock_Config(void)
     {
         Error_Handler();
     }
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC12;
-    PeriphClkInit.Adc12ClockSelection  = RCC_ADC12PLLCLK_DIV1;
+    PeriphClkInit.PeriphClockSelection =
+        RCC_PERIPHCLK_TIM1 | RCC_PERIPHCLK_ADC12;
+    PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
+    PeriphClkInit.Tim1ClockSelection  = RCC_TIM1CLK_HCLK;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
         Error_Handler();
@@ -271,6 +532,102 @@ static void MX_IWDG_Init(void)
     Io_SharedSoftwareWatchdog_Init(
         Io_HardwareWatchdog_Refresh, Io_SoftwareWatchdog_TimeoutCallback);
     /* USER CODE END IWDG_Init 2 */
+}
+
+/**
+ * @brief TIM1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM1_Init(void)
+{
+    /* USER CODE BEGIN TIM1_Init 0 */
+
+    /* USER CODE END TIM1_Init 0 */
+
+    TIM_Encoder_InitTypeDef sConfig       = { 0 };
+    TIM_MasterConfigTypeDef sMasterConfig = { 0 };
+
+    /* USER CODE BEGIN TIM1_Init 1 */
+
+    /* USER CODE END TIM1_Init 1 */
+    htim1.Instance               = TIM1;
+    htim1.Init.Prescaler         = 0;
+    htim1.Init.CounterMode       = TIM_COUNTERMODE_UP;
+    htim1.Init.Period            = TIM1_AUTO_RELOAD_REG;
+    htim1.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+    htim1.Init.RepetitionCounter = 0;
+    htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    sConfig.EncoderMode          = TIM_ENCODERMODE_TI12;
+    sConfig.IC1Polarity          = TIM_ICPOLARITY_RISING;
+    sConfig.IC1Selection         = TIM_ICSELECTION_DIRECTTI;
+    sConfig.IC1Prescaler         = TIM_ICPSC_DIV1;
+    sConfig.IC1Filter            = 0;
+    sConfig.IC2Polarity          = TIM_ICPOLARITY_RISING;
+    sConfig.IC2Selection         = TIM_ICSELECTION_DIRECTTI;
+    sConfig.IC2Prescaler         = TIM_ICPSC_DIV1;
+    sConfig.IC2Filter            = 0;
+    if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger  = TIM_TRGO_RESET;
+    sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+    sMasterConfig.MasterSlaveMode      = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM1_Init 2 */
+
+    /* USER CODE END TIM1_Init 2 */
+}
+
+/**
+ * @brief TIM2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM2_Init(void)
+{
+    /* USER CODE BEGIN TIM2_Init 0 */
+
+    /* USER CODE END TIM2_Init 0 */
+
+    TIM_Encoder_InitTypeDef sConfig       = { 0 };
+    TIM_MasterConfigTypeDef sMasterConfig = { 0 };
+
+    /* USER CODE BEGIN TIM2_Init 1 */
+
+    /* USER CODE END TIM2_Init 1 */
+    htim2.Instance               = TIM2;
+    htim2.Init.Prescaler         = 0;
+    htim2.Init.CounterMode       = TIM_COUNTERMODE_DOWN;
+    htim2.Init.Period            = TIM2_AUTO_RELOAD_REG;
+    htim2.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    sConfig.EncoderMode          = TIM_ENCODERMODE_TI12;
+    sConfig.IC1Polarity          = TIM_ICPOLARITY_RISING;
+    sConfig.IC1Selection         = TIM_ICSELECTION_DIRECTTI;
+    sConfig.IC1Prescaler         = TIM_ICPSC_DIV1;
+    sConfig.IC1Filter            = 0;
+    sConfig.IC2Polarity          = TIM_ICPOLARITY_RISING;
+    sConfig.IC2Selection         = TIM_ICSELECTION_DIRECTTI;
+    sConfig.IC2Prescaler         = TIM_ICPSC_DIV1;
+    sConfig.IC2Filter            = 0;
+    if (HAL_TIM_Encoder_Init(&htim2, &sConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM2_Init 2 */
+
+    /* USER CODE END TIM2_Init 2 */
 }
 
 /**
@@ -495,13 +852,10 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : SECONDARY_APPS_A_Pin SECONDARY_APPS_B_Pin
-       SECONDARY_APPS_Z_Pin SECONDARY_APPS_ALARM_Pin PRIMARY_APPS_A_Pin
-       PRIMARY_APPS_B_Pin PRIMARY_APPS_Z_Pin */
-    GPIO_InitStruct.Pin = SECONDARY_APPS_A_Pin | SECONDARY_APPS_B_Pin |
-                          SECONDARY_APPS_Z_Pin | SECONDARY_APPS_ALARM_Pin |
-                          PRIMARY_APPS_A_Pin | PRIMARY_APPS_B_Pin |
-                          PRIMARY_APPS_Z_Pin;
+    /*Configure GPIO pins : SECONDARY_APPS_Z_Pin SECONDARY_APPS_ALARM_Pin
+     * PRIMARY_APPS_Z_Pin */
+    GPIO_InitStruct.Pin =
+        SECONDARY_APPS_Z_Pin | SECONDARY_APPS_ALARM_Pin | PRIMARY_APPS_Z_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

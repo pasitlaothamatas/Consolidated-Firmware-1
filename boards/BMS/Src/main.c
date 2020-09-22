@@ -104,6 +104,7 @@ struct Charger *          charger;
 struct OkStatus *         bms_ok;
 struct OkStatus *         imd_ok;
 struct OkStatus *         bspd_ok;
+struct CellMonitoring *   cell_monitoring;
 struct Clock *            clock;
 /* USER CODE END PV */
 
@@ -223,6 +224,9 @@ int main(void)
         Io_OkStatuses_IsBspdOkEnabled);
 
     Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
+    cell_monitoring = App_CellMonitoring_Create(
+        Io_LTC6813_Configure, Io_LTC6813_StartADCConversion,
+        Io_LTC6813_ReadAllCellRegisterGroups, Io_LTC6813_GetCellVoltages);
 
     clock = App_SharedClock_Create();
 
