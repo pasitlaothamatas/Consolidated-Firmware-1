@@ -123,9 +123,6 @@ static void Io_ProcessPdmNonCriticalErrorMsg(
     SET_ERROR(
         error_table, PDM_NON_CRITICAL_BOOST_PGOOD_FAULT,
         data->boost_pgood_fault);
-    SET_ERROR(
-        error_table, PDM_NON_CRITICAL_CELL_BALANCE_OVERVOLTAGE_FAULT,
-        data->cell_balance_overvoltage_fault);
     SET_ERROR(error_table, PDM_NON_CRITICAL_CHARGER_FAULT, data->charger_fault);
     SET_ERROR(error_table, PDM_NON_CRITICAL_EFUSE_FAULT, data->efuse_fault);
     SET_ERROR(
@@ -251,8 +248,17 @@ static void Io_ProcessFsmMotorShutdownErrorMsg(
     struct CanMsgs_fsm_motor_shutdown_errors_t *data)
 {
     SET_ERROR(
-        error_table, FSM_MOTOR_SHUTDOWN_DUMMY_MOTOR_SHUTDOWN,
-        data->dummy_motor_shutdown);
+        error_table, FSM_MOTOR_SHUTDOWN_APPS_HAS_DISAGREEMENT,
+        data->apps_has_disagreement);
+    SET_ERROR(
+        error_table, FSM_MOTOR_SHUTDOWN_PAPPS_ALARM_IS_ACTIVE,
+        data->papps_alarm_is_active);
+    SET_ERROR(
+        error_table, FSM_MOTOR_SHUTDOWN_SAPPS_ALARM_IS_ACTIVE,
+        data->sapps_alarm_is_active);
+    SET_ERROR(
+        error_table, FSM_MOTOR_SHUTDOWN_PLAUSIBILITY_CHECK_HAS_FAILED,
+        data->plausibility_check_has_failed);
 }
 
 static void Io_ProcessPdmMotorShutdownErrorMsg(
