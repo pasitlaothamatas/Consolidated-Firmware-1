@@ -3,99 +3,47 @@
 #include "App_CellMonitoring.h"
 #include "App_SharedExitCode.h"
 
-// TODO: have a separate file responsible for the PEC15 exit codes
-#include "Io_LTC6813.h"
-
-struct CellMonitoring
+struct CellVoltages
 {
+    void (*configure)(void);
+    ExitCode (*calculate_cell_voltages)(void);
     uint16_t *cell_voltages;
-    bool      is_adc_awake;
-
-    bool (*is_awake)(void);
-    void (*start_wakeup)(void);
-    void (*end_wakeup)(void);
-    void (*configure_ic)(void);
-    ExitCode (*start_adc_conversion)(void);
-    PEC15Codes (*read_register_groups)(void);
-    uint16_t *(*get_cell_voltages)(void);
 };
 
-struct CellMonitoring *App_CellMonitoring_Create(
-    bool (*is_awake)(void),
-    void (*start_wakeup)(void),
-    void (*end_wakeup)(void),
-    void (*configure_ic)(void),
-    ExitCode (*start_adc_conversion)(void),
-    PEC15Codes (*read_register_groups)(void),
+struct CellVoltages *App_CellVoltages_Create(
+    void (*configure)(void),
+    ExitCode (*calculate_cell_voltages)(void),
     uint16_t *(*get_cell_voltages)(void))
 {
-    struct CellMonitoring *cell_monitoring =
-        malloc(sizeof(struct CellMonitoring));
-    assert(cell_monitoring != NULL);
+    struct CellVoltages *cell_voltages = malloc(sizeof(struct CellVoltages));
+    assert(cell_voltages != NULL);
 
-    cell_monitoring->is_awake             = is_awake;
-    cell_monitoring->start_wakeup         = start_wakeup;
-    cell_monitoring->end_wakeup           = end_wakeup;
-    cell_monitoring->cell_voltages        = NULL;
-    cell_monitoring->configure_ic         = configure_ic;
-    cell_monitoring->start_adc_conversion = start_adc_conversion;
-    cell_monitoring->get_cell_voltages    = get_cell_voltages;
-    cell_monitoring->read_register_groups = read_register_groups;
+    cell_voltages->cell_voltages           = get_cell_voltages();
+    cell_voltages->configure               = configure;
+    cell_voltages->calculate_cell_voltages = calculate_cell_voltages;
 
-    return cell_monitoring;
+    return cell_voltages;
 }
 
-void App_CellMonitoring_Destroy(struct CellMonitoring *cell_monitoring)
+void App_CellVoltages_Destroy(struct CellVoltages *cell_voltages)
 {
-    free(cell_monitoring);
+    free(cell_voltages);
 }
 
-void App_CellVoltages_Configure(struct CellMonitoring *cell_monitoring)
+void App_CellVoltages_Configure(struct CellVoltages *cell_voltages)
 {
-    cell_monitoring->configure_ic();
+    cell_voltages->configure();
 }
 
 ExitCode
-    App_CellMonitoring_ReadCellVoltages(struct CellMonitoring *cell_monitoring)
+    App_CellVoltages_CalculateCellVoltages(struct CellVoltages *cell_voltages)
 {
-    cell_monitoring->start_adc_conversion();
-
-    size_t num_attempts = 0U;
-    while (cell_monitoring->read_register_groups() == PEC15_MISMATCH_ERROR)
-    {
-        ++num_attempts;
-        if (num_attempts == 3U)
-        {
-            return EXIT_CODE_UNIMPLEMENTED;
-        }
-    }
-
-    cell_monitoring->cell_voltages = cell_monitoring->get_cell_voltages();
-
-    return EXIT_CODE_OK;
+    return cell_voltages->calculate_cell_voltages();
 }
 
-uint16_t *App_CellMonitoring_GetCellVoltages(
-    struct CellMonitoring *cell_monitoring,
-    size_t                 ic)
+uint16_t *App_CellVoltages_GetCellVoltages(
+    struct CellVoltages *cell_voltages,
+    size_t               ic)
 {
-    return &(cell_monitoring->cell_voltages[ic]);
-}
-
-void App_CellMonitoring_StartWakeUp(
-    const struct CellMonitoring *const cell_monitoring)
-{
-    cell_monitoring->start_wakeup();
-}
-
-void App_CellMonitoring_EndWakeUp(
-    const struct CellMonitoring *const cell_monitoring)
-{
-    cell_monitoring->end_wakeup();
-}
-
-bool App_CellMonitoring_IsAwake(
-    const struct CellMonitoring *const cell_monitoring)
-{
-    return cell_monitoring->is_awake();
+    return &(cell_voltages->cell_voltages[ic]);
 }

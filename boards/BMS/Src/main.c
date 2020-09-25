@@ -42,7 +42,6 @@
 
 #include "App_BmsWorld.h"
 #include "App_SharedStateMachine.h"
-#include "App_CellMonitoringSignals.h"
 #include "states/App_InitState.h"
 #include "configs/App_HeartbeatMonitorConfig.h"
 #include "configs/App_ImdConfig.h"
@@ -105,7 +104,7 @@ struct Charger *          charger;
 struct OkStatus *         bms_ok;
 struct OkStatus *         imd_ok;
 struct OkStatus *         bspd_ok;
-struct CellMonitoring *   cell_monitoring;
+struct CellVoltages *     cell_voltages;
 struct Clock *            clock;
 /* USER CODE END PV */
 
@@ -225,17 +224,16 @@ int main(void)
         Io_OkStatuses_IsBspdOkEnabled);
 
     Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
-    cell_monitoring = App_CellMonitoring_Create(Io_LTC6813_IsAwake, Io_LTC6813_StartWakeUp, Io_LTC6813_EndWakeUp,
-        Io_LTC6813_Configure, Io_LTC6813_StartADCConversion,
-        Io_LTC6813_ReadAllCellRegisterGroups, Io_LTC6813_GetCellVoltages);
+    cell_voltages = App_CellVoltages_Create(
+        Io_LTC6813_Configure, Io_LTC6813_ReadAllCellRegisterGroups,
+        Io_LTC6813_GetCellVoltages);
+    App_CellVoltages_Configure(cell_voltages);
 
     clock = App_SharedClock_Create();
 
     world = App_BmsWorld_Create(
         can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-        bms_ok, imd_ok, bspd_ok, cell_monitoring, clock,
-
-        App_CellMonitoringSignal_IsAsleep, App_CellMonitoringSignal_Callback);
+        bms_ok, imd_ok, bspd_ok, cell_voltages, clock);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);
@@ -576,17 +574,17 @@ static void MX_SPI2_Init(void)
     hspi2.Instance               = SPI2;
     hspi2.Init.Mode              = SPI_MODE_MASTER;
     hspi2.Init.Direction         = SPI_DIRECTION_2LINES;
-    hspi2.Init.DataSize          = SPI_DATASIZE_4BIT;
-    hspi2.Init.CLKPolarity       = SPI_POLARITY_LOW;
-    hspi2.Init.CLKPhase          = SPI_PHASE_1EDGE;
+    hspi2.Init.DataSize          = SPI_DATASIZE_8BIT;
+    hspi2.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+    hspi2.Init.CLKPhase          = SPI_PHASE_2EDGE;
     hspi2.Init.NSS               = SPI_NSS_SOFT;
-    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
     hspi2.Init.FirstBit          = SPI_FIRSTBIT_MSB;
     hspi2.Init.TIMode            = SPI_TIMODE_DISABLE;
     hspi2.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
     hspi2.Init.CRCPolynomial     = 7;
     hspi2.Init.CRCLength         = SPI_CRC_LENGTH_DATASIZE;
-    hspi2.Init.NSSPMode          = SPI_NSS_PULSE_ENABLE;
+    hspi2.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
     if (HAL_SPI_Init(&hspi2) != HAL_OK)
     {
         Error_Handler();
@@ -744,9 +742,11 @@ static void MX_GPIO_Init(void)
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(
         GPIOB,
-        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin |
-            SPI2_NSS_Pin,
+        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin,
         GPIO_PIN_RESET);
+
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(SPI2_NSS_GPIO_Port, SPI2_NSS_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(
@@ -786,13 +786,20 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /*Configure GPIO pins : PRE_CHARGE_EN_Pin AIR_EN_Pin BMS_OK_Pin
-       MCU_LATCH_RESET_Pin SPI2_NSS_Pin */
-    GPIO_InitStruct.Pin = PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin |
-                          MCU_LATCH_RESET_Pin | SPI2_NSS_Pin;
+     * MCU_LATCH_RESET_Pin */
+    GPIO_InitStruct.Pin =
+        PRE_CHARGE_EN_Pin | AIR_EN_Pin | BMS_OK_Pin | MCU_LATCH_RESET_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : SPI2_NSS_Pin */
+    GPIO_InitStruct.Pin   = SPI2_NSS_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(SPI2_NSS_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pins : STATUS_R_Pin STATUS_G_Pin STATUS_B_Pin */
     GPIO_InitStruct.Pin   = STATUS_R_Pin | STATUS_G_Pin | STATUS_B_Pin;

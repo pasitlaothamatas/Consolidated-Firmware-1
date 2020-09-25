@@ -9,7 +9,6 @@
 #include "App_OkStatus.h"
 #include "App_SharedClock.h"
 #include "App_CellMonitoring.h"
-#include "App_CellMonitoringSignals.h"
 #include "App_SharedWaitSignal.h"
 
 struct BmsWorld;
@@ -33,10 +32,8 @@ struct BmsWorld *App_BmsWorld_Create(
     struct OkStatus *         bms_ok,
     struct OkStatus *         imd_ok,
     struct OkStatus *         bspd_ok,
-    struct CellMonitoring * cell_monitor,
-    struct Clock *            clock,
-    bool (*is_cell_monitor_asleep)(struct BmsWorld *),
-    void (*cell_monitor_callback)(struct BmsWorld *));
+    struct CellVoltages *     cell_monitor,
+    struct Clock *            clock);
 
 /**
  * Deallocate the memory used by the given world
@@ -114,8 +111,7 @@ struct OkStatus *App_BmsWorld_GetBspdOkStatus(const struct BmsWorld *world);
  * @param world The world to get the cell monitoring device from
  * @return The cell monitoring device
  */
-struct CellMonitoring *
-    App_BmsWorld_GetCellMonitor(const struct BmsWorld *world);
+struct CellVoltages *App_BmsWorld_GetCellMonitor(const struct BmsWorld *world);
 
 /**
  * Get the clock for the given world

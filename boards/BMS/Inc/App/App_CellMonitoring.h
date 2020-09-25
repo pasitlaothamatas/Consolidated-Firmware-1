@@ -3,23 +3,18 @@
 #include <stdint.h>
 #include "App_SharedExitCode.h"
 
-// TODO: Include this here for now
-#include "Io_LTC6813.h"
+struct CellVoltages;
 
-struct CellMonitoring;
-
-struct CellMonitoring *App_CellMonitoring_Create(
-    bool (*is_awake)(void),
-    void (*start_wakeup)(void),
-    void (*end_wakeup)(void),
-    void (*configure_ic)(void),
-    ExitCode (*start_adc_conversion)(void),
-    PEC15Codes (*read_register_groups)(void),
+struct CellVoltages *App_CellVoltages_Create(
+    void (*configure)(void),
+    ExitCode (*calculate_cell_voltages)(void),
     uint16_t *(*get_cell_voltages)(void));
 
-bool App_CellMonitoring_IsAwake(const struct CellMonitoring *cell_monitoring);
+void App_CellVoltages_Configure(struct CellVoltages *cell_voltages);
 
-void App_CellMonitoring_StartWakeUp(
-    const struct CellMonitoring *cell_monitoring);
+ExitCode
+    App_CellVoltages_CalculateCellVoltages(struct CellVoltages *cell_voltages);
 
-void App_CellMonitoring_EndWakeUp(const struct CellMonitoring *cell_monitoring);
+uint16_t *App_CellVoltages_GetCellVoltages(
+    struct CellVoltages *cell_voltages,
+    size_t               ic);
