@@ -75,9 +75,10 @@ static const struct LookupTables lookup_tables = {
 
 struct LTC6813
 {
-    SPI_HandleTypeDef *hspi;
-    GPIO_TypeDef *     nss_port;
-    uint16_t           nss_pin;
+    struct SharedSpi *spi;
+
+    GPIO_TypeDef *nss_port;
+    uint16_t      nss_pin;
 
     // A counter used to count the number of times the PEC fails.
     uint8_t pec15_error_counter;
@@ -120,8 +121,7 @@ static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size)
 static ExitCode Io_LTC6813_EnterReadyState(void)
 {
     uint8_t rx_data;
-    if(Io_SharedSpi_Receive(
-        ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, &rx_data, 1U) != HAL_OK)
+    if (Io_SharedSpi_Receive(ltc_6813.spi, &rx_data, 1U) != HAL_OK)
     {
         return EXIT_CODE_UNIMPLEMENTED;
     }
@@ -143,8 +143,7 @@ static ExitCode Io_LTC6813_StartADCConversion(void)
     tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
     tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
 
-    return Io_SharedSpi_Transmit(
-               ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U)
+    return (Io_SharedSpi_Transmit(ltc_6813.spi, tx_cmd, 4U) == HAL_OK)
                ? EXIT_CODE_OK
                : EXIT_CODE_UNIMPLEMENTED;
 }
@@ -164,11 +163,10 @@ static ExitCode Io_LTC6813_PollAdcConversion(void)
     tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
 
     // TODO: Add a timeout counter?
-    while(rx_data == 0xFF)
+    while (rx_data == 0xFF)
     {
-        if(Io_SharedSpi_TransmitAndReceive(
-                ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U,
-                &rx_data, 1U) != HAL_OK)
+        if (Io_SharedSpi_TransmitAndReceive(
+                ltc_6813.spi, tx_cmd, 4U, &rx_data, 1U) != HAL_OK)
         {
             return EXIT_CODE_UNIMPLEMENTED;
         }
@@ -238,9 +236,7 @@ void Io_LTC6813_Init(
 {
     assert(hspi != NULL);
 
-    ltc_6813.hspi                = hspi;
-    ltc_6813.nss_port            = nss_port;
-    ltc_6813.nss_pin             = nss_pin;
+    ltc_6813.spi                 = Io_SharedSpi_Create(hspi, nss_port, nss_pin);
     ltc_6813.pec15_error_counter = 0U;
 }
 
@@ -256,7 +252,6 @@ void Io_LTC6813_Configure(void)
         (uint8_t)(CELL_OVERVOLTAGE_THRESHOLD >> 4)
     };
 
-    // Write to configuration register group A
     uint8_t tx_cmd[NUM_CMD_BYTES];
     tx_cmd[0]             = (uint8_t)(WRCFGA >> 8);
     tx_cmd[1]             = (uint8_t)WRCFGA;
@@ -266,22 +261,16 @@ void Io_LTC6813_Configure(void)
 
     uint8_t tx_payload[8] = { 0 };
     memcpy(tx_payload, DEFAULT_CONFIG_REG, 4U);
+
     uint16_t tx_write_cmd_pec15 = Io_CalculatePec15(tx_payload, 6U);
     tx_payload[6]               = (uint8_t)(tx_write_cmd_pec15 >> 8);
     tx_payload[7]               = (uint8_t)tx_write_cmd_pec15;
 
-    // Transfer the command followed by the payload data to write configure the
-    // LTC6813 chips
-    HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(ltc_6813.hspi, tx_cmd, 4U, 100U);
-
-    // Send the tx_write command to all of the LTC6813 chips connected on the
-    // daisy chain.
-    for (size_t i = 0U; i < NUM_OF_LTC6813; i++)
-    {
-        HAL_SPI_Transmit(ltc_6813.hspi, tx_payload, 8U, 100U);
-    }
-    HAL_GPIO_WritePin(ltc_6813.nss_port, ltc_6813.nss_pin, GPIO_PIN_SET);
+    Io_SharedSpi_SetNssLow(ltc_6813.spi);
+    Io_SharedSpi_TransmitWithoutNssToggle(ltc_6813.spi, tx_cmd, 4U);
+    Io_SharedSpi_MultipleTransmitWithoutNssToggle(
+        ltc_6813.spi, tx_payload, 8U, NUM_OF_LTC6813);
+    Io_SharedSpi_SetNssHigh(ltc_6813.spi);
 }
 
 ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
@@ -290,7 +279,6 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
     uint8_t  tx_cmd[4];
     uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_LTC6813] = { 0 };
 
-    // TODO: Do something with the exti codes?
     Io_LTC6813_EnterReadyState();
     Io_LTC6813_StartADCConversion();
     Io_LTC6813_PollAdcConversion();
@@ -311,8 +299,8 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
         tx_cmd[3]             = (uint8_t)(tx_cmd_pec15);
 
         Io_SharedSpi_TransmitAndReceive(
-            ltc_6813.hspi, ltc_6813.nss_port, ltc_6813.nss_pin, tx_cmd, 4U,
-            rx_cell_voltages, NUM_OF_RX_BYTES * NUM_OF_LTC6813);
+            ltc_6813.spi, tx_cmd, 4U, rx_cell_voltages,
+            NUM_OF_RX_BYTES * NUM_OF_LTC6813);
 
         for (size_t current_ic = 0U; current_ic < NUM_OF_LTC6813; current_ic++)
         {

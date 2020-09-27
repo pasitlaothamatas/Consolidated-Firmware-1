@@ -12,5 +12,5 @@ typedef enum
 #define EXIT_OK(code) (EXIT_CODE_OK == (code))
 
 #define RETURN_IF_EXIT_NOT_OK(code) \
-    if ((code) != EXIT_CODE_OK)          \
+    if ((code) != EXIT_CODE_OK)     \
     return (code)
