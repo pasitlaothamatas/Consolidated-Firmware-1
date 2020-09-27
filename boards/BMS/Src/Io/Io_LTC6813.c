@@ -2,30 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stm32f3xx_hal.h>
 #include "Io_LTC6813.h"
 #include "Io_SharedSpi.h"
-#include "config/Io_LTC6813Configs.h"
+#include "configs/Io_LTC6813Configs.h"
 
-enum LTC6813_CellVoltageRegisterGroups
+enum CellVoltageRegisterGroups
 {
-    LTC6813_REGISTER_GROUP_A = 0,
-    LTC6813_REGISTER_GROUP_B,
-    LTC6813_REGISTER_GROUP_C,
-    LTC6813_REGISTER_GROUP_D,
-    LTC6813_REGISTER_GROUP_E,
-    LTC6813_REGISTER_GROUP_F,
-    LTC6813_NUM_OF_CELL_REGISTER_GROUPS
+    CELL_VOLTAGE_REGISTER_GROUP_A = 0,
+    CELL_VOLTAGE_REGISTER_GROUP_B,
+    CELL_VOLTAGE_REGISTER_GROUP_C,
+    CELL_VOLTAGE_REGISTER_GROUP_D,
+    CELL_VOLTAGE_REGISTER_GROUP_E,
+    CELL_VOLTAGE_REGISTER_GROUP_F,
+    NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS
 };
 
 struct LookupTables
 {
     // Commands used to read cell voltage register groups.
     uint16_t cell_voltage_register_group_commands
-        [LTC6813_NUM_OF_CELL_REGISTER_GROUPS];
+        [NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS];
 
     // The CRC table used to calculate 15 bit packet error codes (PEC15).
-    uint16_t crc_table[256];
+    uint16_t crc_table[UINT8_MAX + 1];
 };
 
 // clang-format off
@@ -73,23 +72,38 @@ static const struct LookupTables lookup_tables = {
 };
 // clang-format on
 
+#define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
+#define NUM_OF_CMD_BYTES 4U
+#define NUM_OF_PEC15_BYTES_PER_CMD 2U
+#define NUM_OF_RX_BYTES 8U
+
+#define ADCOPT 2U
+#define DCP 0U
+#define CELL_CH_ALL 0U
+#define REFON 1U
+#define DTEN 0U
+#define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
+#define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
+
+#define ADCV (0x260 + (ADCOPT << 7) + (DCP << 4) + CELL_CH_ALL)
+#define PLADC 0x1407
+
 struct LTC6813
 {
+    // A pointer to the SPI interface
     struct SharedSpi *spi;
 
-    GPIO_TypeDef *nss_port;
-    uint16_t      nss_pin;
-
-    // A counter used to count the number of times the PEC fails.
+    // A counter used to count the number of times a PEC error occurs.
     uint8_t pec15_error_counter;
 
     // An array containing flags for PEC15 errors for each register group. True
     // if a PEC15 error does not occur for the given register group, false if a
     // PEC15 error occurs.
-    bool pec15_errors_for_register_groups[NUM_OF_LTC6813][6];
+    bool pec15_errors_for_register_groups[NUM_OF_LTC6813]
+                                         [NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS];
 
-    // Array containing cell voltages for each LTC6813 IC.
-    uint16_t cell_voltages[NUM_OF_LTC6813][NUM_CELLS_PER_LTC6813];
+    // An array containing cell voltages for each LTC6813 IC.
+    uint16_t cell_voltages[NUM_OF_LTC6813][NUM_OF_CELLS_PER_LTC6813];
 };
 
 static struct LTC6813 ltc_6813;
@@ -125,50 +139,56 @@ static ExitCode Io_LTC6813_EnterReadyState(void)
     {
         return EXIT_CODE_UNIMPLEMENTED;
     }
-    UNUSED(rx_data);
 
     return EXIT_CODE_OK;
 }
 
 static ExitCode Io_LTC6813_StartADCConversion(void)
 {
-    const uint16_t ADCV =
-        0x260 + (ADCOPT << 7) + (DCP_DISABLED << 4) + CELL_CH_ALL;
-
-    uint8_t tx_cmd[4];
+    uint8_t tx_cmd[NUM_OF_CMD_BYTES];
     tx_cmd[0] = (uint8_t)(ADCV >> 8);
     tx_cmd[1] = (uint8_t)ADCV;
 
-    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2U);
-    tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
-    tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
+    uint16_t tx_cmd_pec15 =
+        Io_CalculatePec15(tx_cmd, NUM_OF_PEC15_BYTES_PER_CMD);
+    tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
+    tx_cmd[3] = (uint8_t)tx_cmd_pec15;
 
-    return (Io_SharedSpi_Transmit(ltc_6813.spi, tx_cmd, 4U) == HAL_OK)
+    return (Io_SharedSpi_Transmit(ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES) ==
+            HAL_OK)
                ? EXIT_CODE_OK
                : EXIT_CODE_UNIMPLEMENTED;
 }
 
 static ExitCode Io_LTC6813_PollAdcConversion(void)
 {
-    const uint16_t PLADC = 0x1407;
-
-    uint8_t tx_cmd[4];
+    uint8_t tx_cmd[NUM_OF_CMD_BYTES];
     uint8_t rx_data = 0xFF;
 
     tx_cmd[0] = (uint8_t)PLADC;
     tx_cmd[1] = (uint8_t)(PLADC >> 8);
 
-    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2U);
-    tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
-    tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
+    uint16_t tx_cmd_pec15 =
+        Io_CalculatePec15(tx_cmd, NUM_OF_PEC15_BYTES_PER_CMD);
+    tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
+    tx_cmd[3] = (uint8_t)tx_cmd_pec15;
 
-    // TODO: Add a timeout counter?
+    uint32_t adc_conversion_timeout_counter = 0U;
+
     while (rx_data == 0xFF)
     {
         if (Io_SharedSpi_TransmitAndReceive(
-                ltc_6813.spi, tx_cmd, 4U, &rx_data, 1U) != HAL_OK)
+                ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES, &rx_data, 1U) != HAL_OK)
         {
             return EXIT_CODE_UNIMPLEMENTED;
+        }
+
+        ++adc_conversion_timeout_counter;
+
+        // Timeout counter threshold of 10 was chosen arbitrarily.
+        if (adc_conversion_timeout_counter >= 10U)
+        {
+            return EXIT_CODE_TIMEOUT;
         }
     }
 
@@ -181,10 +201,10 @@ static void Io_LTC6813_ParseCellsAndPerformPec15Check(
     uint8_t *rx_cell_voltages)
 {
     size_t cell_voltage_index =
-        current_ic * NUM_CELLS_PER_LTC6813_REGISTER_GROUP;
+        current_ic * NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP;
 
     for (size_t current_cell = 0U;
-         current_cell < NUM_CELLS_PER_LTC6813_REGISTER_GROUP; current_cell++)
+         current_cell < NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP; current_cell++)
     {
         uint32_t cell_voltage =
             (uint32_t)(rx_cell_voltages[cell_voltage_index]) |
@@ -193,7 +213,7 @@ static void Io_LTC6813_ParseCellsAndPerformPec15Check(
         ltc_6813.cell_voltages[current_ic]
                               [current_cell +
                                current_register_group *
-                                   NUM_CELLS_PER_LTC6813_REGISTER_GROUP] =
+                                   NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP] =
             (uint16_t)cell_voltage;
 
         // Each cell voltage is represented as a pair of bytes. Therefore
@@ -238,26 +258,35 @@ void Io_LTC6813_Init(
 
     ltc_6813.spi                 = Io_SharedSpi_Create(hspi, nss_port, nss_pin);
     ltc_6813.pec15_error_counter = 0U;
+    memset(
+        ltc_6813.cell_voltages, 0U,
+        NUM_OF_LTC6813 * NUM_OF_CELLS_PER_LTC6813 *
+            sizeof(ltc_6813.cell_voltages));
+    memset(
+        ltc_6813.pec15_errors_for_register_groups, true,
+        NUM_OF_LTC6813 * NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS *
+            sizeof(ltc_6813.pec15_errors_for_register_groups));
 }
 
 void Io_LTC6813_Configure(void)
 {
     // Commands used to write to the Configuration Register groups
-    const uint16_t WRCFGA                = 0x01;
-    const uint8_t  DEFAULT_CONFIG_REG[4] = {
-        (uint8_t)(REFON << 2) + (uint8_t)(DTEN << 1) + ADCOPT,
-        (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD),
+    const uint16_t WRCFGA = 0x01;
+
+    const uint32_t DEFAULT_CONFIG_REG[4] = {
+        (REFON << 2) + (DTEN << 1) + ADCOPT, (CELL_UNDERVOLTAGE_THRESHOLD),
         (uint8_t)((CELL_OVERVOLTAGE_THRESHOLD & 0xF) << 4) +
-            (uint8_t)(CELL_UNDERVOLTAGE_THRESHOLD >> 8),
-        (uint8_t)(CELL_OVERVOLTAGE_THRESHOLD >> 4)
+            (CELL_UNDERVOLTAGE_THRESHOLD >> 8),
+        (CELL_OVERVOLTAGE_THRESHOLD >> 4)
     };
 
-    uint8_t tx_cmd[NUM_CMD_BYTES];
-    tx_cmd[0]             = (uint8_t)(WRCFGA >> 8);
-    tx_cmd[1]             = (uint8_t)WRCFGA;
-    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2);
-    tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
-    tx_cmd[3]             = (uint8_t)tx_cmd_pec15;
+    uint8_t tx_cmd[NUM_OF_CMD_BYTES];
+    tx_cmd[0] = (uint8_t)(WRCFGA >> 8);
+    tx_cmd[1] = (uint8_t)WRCFGA;
+    uint16_t tx_cmd_pec15 =
+        Io_CalculatePec15(tx_cmd, NUM_OF_PEC15_BYTES_PER_CMD);
+    tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
+    tx_cmd[3] = (uint8_t)tx_cmd_pec15;
 
     uint8_t tx_payload[8] = { 0 };
     memcpy(tx_payload, DEFAULT_CONFIG_REG, 4U);
@@ -267,7 +296,8 @@ void Io_LTC6813_Configure(void)
     tx_payload[7]               = (uint8_t)tx_write_cmd_pec15;
 
     Io_SharedSpi_SetNssLow(ltc_6813.spi);
-    Io_SharedSpi_TransmitWithoutNssToggle(ltc_6813.spi, tx_cmd, 4U);
+    Io_SharedSpi_TransmitWithoutNssToggle(
+        ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES);
     Io_SharedSpi_MultipleTransmitWithoutNssToggle(
         ltc_6813.spi, tx_payload, 8U, NUM_OF_LTC6813);
     Io_SharedSpi_SetNssHigh(ltc_6813.spi);
@@ -276,15 +306,15 @@ void Io_LTC6813_Configure(void)
 ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
 {
     uint16_t cell_register_group_cmd;
-    uint8_t  tx_cmd[4];
+    uint8_t  tx_cmd[NUM_OF_CMD_BYTES];
     uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_LTC6813] = { 0 };
 
-    Io_LTC6813_EnterReadyState();
-    Io_LTC6813_StartADCConversion();
-    Io_LTC6813_PollAdcConversion();
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartADCConversion())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
 
-    for (size_t current_register_group = LTC6813_REGISTER_GROUP_A;
-         current_register_group < LTC6813_NUM_OF_CELL_REGISTER_GROUPS;
+    for (size_t current_register_group = CELL_VOLTAGE_REGISTER_GROUP_A;
+         current_register_group < NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS;
          current_register_group++)
     {
         cell_register_group_cmd =
@@ -294,12 +324,13 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
         tx_cmd[0] = (uint8_t)cell_register_group_cmd;
         tx_cmd[1] = (uint8_t)(cell_register_group_cmd >> 8);
 
-        uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd, 2U);
-        tx_cmd[2]             = (uint8_t)(tx_cmd_pec15 >> 8);
-        tx_cmd[3]             = (uint8_t)(tx_cmd_pec15);
+        uint16_t tx_cmd_pec15 =
+            Io_CalculatePec15(tx_cmd, NUM_OF_PEC15_BYTES_PER_CMD);
+        tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
+        tx_cmd[3] = (uint8_t)(tx_cmd_pec15);
 
         Io_SharedSpi_TransmitAndReceive(
-            ltc_6813.spi, tx_cmd, 4U, rx_cell_voltages,
+            ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES, rx_cell_voltages,
             NUM_OF_RX_BYTES * NUM_OF_LTC6813);
 
         for (size_t current_ic = 0U; current_ic < NUM_OF_LTC6813; current_ic++)
@@ -312,10 +343,9 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
     // Reset the value of the PEC15 error counter for the next cycle.
     ltc_6813.pec15_error_counter = 0U;
 
-    // Return EXIT_CODE_UNIMPLEMENTED if PEC15 errors occur, else return
+    // Return EXIT_CODE_ERROR if PEC15 errors occur, else return
     // EXIT_CODE_OK.
-    return (ltc_6813.pec15_error_counter > 0U) ? EXIT_CODE_UNIMPLEMENTED
-                                               : EXIT_CODE_OK;
+    return (ltc_6813.pec15_error_counter > 0U) ? EXIT_CODE_ERROR : EXIT_CODE_OK;
 }
 
 uint16_t *Io_LTC6813_GetCellVoltages(void)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stm32f3xx_hal.h>
 #include "App_SharedExitCode.h"
 
 void Io_LTC6813_Init(
