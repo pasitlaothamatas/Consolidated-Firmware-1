@@ -28,6 +28,9 @@ static void DriveStateRunOnTick100Hz(struct StateMachine *const state_machine)
 
     App_SetPeriodicCanSignals_Imd(can_tx, imd);
     App_CellVoltages_CalculateCellVoltages(cell_monitoring);
+    uint16_t *cell_voltages =
+        App_CellVoltages_GetCellVoltages(cell_monitoring, 0);
+    UNUSED(cell_voltages);
 }
 
 static void DriveStateRunOnExit(struct StateMachine *const state_machine)

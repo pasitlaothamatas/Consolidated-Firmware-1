@@ -24,7 +24,7 @@ struct LookupTables
         [NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS];
 
     // The CRC table used to calculate 15 bit packet error codes (PEC15).
-    uint16_t crc_table[UINT8_MAX + 1];
+    uint16_t crc[UINT8_MAX + 1];
 };
 
 // clang-format off
@@ -39,7 +39,7 @@ static const struct LookupTables lookup_tables = {
                 0x0B00  // RDCVF
             },
 
-    .crc_table =
+    .crc =
             {   0x0, 0xC599, 0xCEAB, 0xB32,  0xD8CF, 0x1D56, 0x1664, 0xD3FD, 0xF407,
                 0x319E, 0x3AAC, 0xFF35, 0x2CC8, 0xE951, 0xE263, 0x27FA, 0xAD97, 0x680E,
                 0x633C, 0xA6A5, 0x7558, 0xB0C1, 0xBBF3, 0x7E6A, 0x5990, 0x9C09, 0x973B,
@@ -75,7 +75,7 @@ static const struct LookupTables lookup_tables = {
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
 #define NUM_OF_CMD_BYTES 4U
 #define NUM_OF_PEC15_BYTES_PER_CMD 2U
-#define NUM_OF_RX_BYTES 8U
+#define NUM_OF_CELL_VOLTAGE_RX_BYTES 8U
 
 #define ADCOPT 2U
 #define DCP 0U
@@ -85,6 +85,7 @@ static const struct LookupTables lookup_tables = {
 #define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
 #define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
 
+#define WRCFGA 0x01
 #define ADCV (0x260 + (ADCOPT << 7) + (DCP << 4) + CELL_CH_ALL)
 #define PLADC 0x1407
 
@@ -96,26 +97,53 @@ struct LTC6813
     // A counter used to count the number of times a PEC error occurs.
     uint8_t pec15_error_counter;
 
-    // An array containing flags for PEC15 errors for each register group. True
-    // if a PEC15 error does not occur for the given register group, false if a
-    // PEC15 error occurs.
-    bool pec15_errors_for_register_groups[NUM_OF_LTC6813]
-                                         [NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS];
-
     // An array containing cell voltages for each LTC6813 IC.
     uint16_t cell_voltages[NUM_OF_LTC6813][NUM_OF_CELLS_PER_LTC6813];
 };
 
 static struct LTC6813 ltc_6813;
 
+/**
+ * Calculate the 15-bit packet error code (PEC15) for the given data buffer.
+ * @param data A pointer to the buffer containing data used to calculate the
+ * PEC15 code.
+ * @param size The number of data elements used to calculate the PEC15 code
+ * (Note: this number can be a positive integer less than or equal to the size
+ * of the data buffer).
+ * @return The calculated PEC15 code
+ */
 static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size);
+
+/**
+ * Transition all LTC6813 chips on the daisy chain from the IDLE state to the READY
+ * state.
+ * @return EXIT_CODE_OK if the SCK and NSS pin can be toggled without timing out
+ * or errors. Else, EXIT_CODE_UNIMPLEMENTED.
+ */
 static ExitCode Io_LTC6813_EnterReadyState(void);
+
+/**
+ * Start ADC conversions for all LTC6813 chips on the daisy chain.
+ * @return EXIT_CODE_OK if the command used to toggle the ADC can be sent to the
+ * device without timing out or errors. Else, EXIT_CODE_UNIMPLEMENTED.
+ */
 static ExitCode Io_LTC6813_StartADCConversion(void);
+
+/**
+ * Check if all LTC6813 chips in the daisy chain have all completed converting analogue
+ * cell voltages to digital voltages.
+ * @return EXIT_CODE_OK if all LTC6813 chips on the daisy chain have completed ADC
+ * conversions. EXIT_CODE_TIMEOUT if ADC conversions could not be completed
+ * before timing out. EXIT_CODE_UNIMPLEMENTED if the command sent and received
+ * to check the status of ADC conversions was not transmitted or received
+ * successfully.
+ */
 static ExitCode Io_LTC6813_PollAdcConversion(void);
-static void     Io_LTC6813_ParseCellsAndPerformPec15Check(
-        size_t   current_ic,
-        size_t   current_register_group,
-        uint8_t *rx_cell_voltages);
+
+static void Io_LTC6813_ParseCellsAndPerformPec15Check(
+    size_t   current_ic,
+    size_t   current_register_group,
+    uint8_t *rx_cell_voltages);
 
 static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size)
 {
@@ -125,7 +153,7 @@ static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size)
     for (size_t i = 0U; i < size; i++)
     {
         pec15_index = ((pec15 >> 7) ^ data[i]) & 0xFF;
-        pec15 = (uint16_t)((pec15 << 8) ^ lookup_tables.crc_table[pec15_index]);
+        pec15       = (uint16_t)((pec15 << 8) ^ lookup_tables.crc[pec15_index]);
     }
 
     // Set the LSB of the computed PEC15 to 0
@@ -135,9 +163,9 @@ static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size)
 static ExitCode Io_LTC6813_EnterReadyState(void)
 {
     uint8_t rx_data;
-    if (Io_SharedSpi_Receive(ltc_6813.spi, &rx_data, 1U) != HAL_OK)
+    for (size_t i = 0U; i < NUM_OF_LTC6813; i++)
     {
-        return EXIT_CODE_UNIMPLEMENTED;
+        Io_SharedSpi_Receive(ltc_6813.spi, &rx_data, 1U);
     }
 
     return EXIT_CODE_OK;
@@ -186,7 +214,7 @@ static ExitCode Io_LTC6813_PollAdcConversion(void)
         ++adc_conversion_timeout_counter;
 
         // Timeout counter threshold of 10 was chosen arbitrarily.
-        if (adc_conversion_timeout_counter >= 10U)
+        if (adc_conversion_timeout_counter >= 50U)
         {
             return EXIT_CODE_TIMEOUT;
         }
@@ -200,8 +228,7 @@ static void Io_LTC6813_ParseCellsAndPerformPec15Check(
     size_t   current_register_group,
     uint8_t *rx_cell_voltages)
 {
-    size_t cell_voltage_index =
-        current_ic * NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP;
+    size_t cell_voltage_index = current_ic * NUM_OF_CELL_VOLTAGE_RX_BYTES;
 
     for (size_t current_cell = 0U;
          current_cell < NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP; current_cell++)
@@ -225,25 +252,11 @@ static void Io_LTC6813_ParseCellsAndPerformPec15Check(
     uint32_t received_pec15 =
         (uint32_t)(rx_cell_voltages[cell_voltage_index] << 8) |
         (uint32_t)(rx_cell_voltages[cell_voltage_index + 1]);
-    uint32_t calculated_pec15 =
-        Io_CalculatePec15(&rx_cell_voltages[current_ic * NUM_OF_RX_BYTES], 6U);
+    uint32_t calculated_pec15 = Io_CalculatePec15(
+        &rx_cell_voltages[current_ic * NUM_OF_CELL_VOLTAGE_RX_BYTES], 6U);
 
-    if (received_pec15 == calculated_pec15)
+    if (received_pec15 != calculated_pec15)
     {
-        // Set the element of the given array as true if the PEC15 received is
-        // the same as the PEC15 calculated.
-        ltc_6813.pec15_errors_for_register_groups[current_ic]
-                                                 [current_register_group] =
-            true;
-    }
-    else
-    {
-        // Set the element of the given array as false if the PEC15 received is
-        // different from the PEC15 calculated
-        ltc_6813.pec15_errors_for_register_groups[current_ic]
-                                                 [current_register_group] =
-            false;
-
         // Increment the number of PEC15 errors.
         ltc_6813.pec15_error_counter++;
     }
@@ -261,25 +274,11 @@ void Io_LTC6813_Init(
     memset(
         ltc_6813.cell_voltages, 0U,
         NUM_OF_LTC6813 * NUM_OF_CELLS_PER_LTC6813 *
-            sizeof(ltc_6813.cell_voltages));
-    memset(
-        ltc_6813.pec15_errors_for_register_groups, true,
-        NUM_OF_LTC6813 * NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS *
-            sizeof(ltc_6813.pec15_errors_for_register_groups));
+            sizeof(ltc_6813.cell_voltages[0][0]));
 }
 
 void Io_LTC6813_Configure(void)
 {
-    // Commands used to write to the Configuration Register groups
-    const uint16_t WRCFGA = 0x01;
-
-    const uint32_t DEFAULT_CONFIG_REG[4] = {
-        (REFON << 2) + (DTEN << 1) + ADCOPT, (CELL_UNDERVOLTAGE_THRESHOLD),
-        (uint8_t)((CELL_OVERVOLTAGE_THRESHOLD & 0xF) << 4) +
-            (CELL_UNDERVOLTAGE_THRESHOLD >> 8),
-        (CELL_OVERVOLTAGE_THRESHOLD >> 4)
-    };
-
     uint8_t tx_cmd[NUM_OF_CMD_BYTES];
     tx_cmd[0] = (uint8_t)(WRCFGA >> 8);
     tx_cmd[1] = (uint8_t)WRCFGA;
@@ -288,16 +287,29 @@ void Io_LTC6813_Configure(void)
     tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
     tx_cmd[3] = (uint8_t)tx_cmd_pec15;
 
+    const uint32_t DEFAULT_CONFIG_REG[4] = {
+        (REFON << 2) + (DTEN << 1) + ADCOPT, (CELL_UNDERVOLTAGE_THRESHOLD),
+        (uint8_t)((CELL_OVERVOLTAGE_THRESHOLD & 0xF) << 4) +
+            (CELL_UNDERVOLTAGE_THRESHOLD >> 8),
+        (CELL_OVERVOLTAGE_THRESHOLD >> 4)
+    };
+
+    // The payload data is 8 bytes wide. The first 6 bytes is used to configure
+    // Configuration Register A, while the remaining two bytes are the PEC15 for
+    // the payload data transmitted.
     uint8_t tx_payload[8] = { 0 };
     memcpy(tx_payload, DEFAULT_CONFIG_REG, 4U);
-
-    uint16_t tx_write_cmd_pec15 = Io_CalculatePec15(tx_payload, 6U);
-    tx_payload[6]               = (uint8_t)(tx_write_cmd_pec15 >> 8);
-    tx_payload[7]               = (uint8_t)tx_write_cmd_pec15;
+    uint16_t tx_payload_pec15 = Io_CalculatePec15(tx_payload, 6U);
+    tx_payload[6]             = (uint8_t)(tx_payload_pec15 >> 8);
+    tx_payload[7]             = (uint8_t)tx_payload_pec15;
 
     Io_SharedSpi_SetNssLow(ltc_6813.spi);
+
+    // Transmit the command to write to Configuration Register A.
     Io_SharedSpi_TransmitWithoutNssToggle(
         ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES);
+
+    // Transmit the payload data to all devices connected to the daisy chain.
     Io_SharedSpi_MultipleTransmitWithoutNssToggle(
         ltc_6813.spi, tx_payload, 8U, NUM_OF_LTC6813);
     Io_SharedSpi_SetNssHigh(ltc_6813.spi);
@@ -307,7 +319,9 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
 {
     uint16_t cell_register_group_cmd;
     uint8_t  tx_cmd[NUM_OF_CMD_BYTES];
-    uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_LTC6813] = { 0 };
+    uint8_t  rx_cell_voltages[NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813] = {
+        0
+    };
 
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartADCConversion())
@@ -331,7 +345,7 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
 
         Io_SharedSpi_TransmitAndReceive(
             ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES, rx_cell_voltages,
-            NUM_OF_RX_BYTES * NUM_OF_LTC6813);
+            NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813);
 
         for (size_t current_ic = 0U; current_ic < NUM_OF_LTC6813; current_ic++)
         {
@@ -343,7 +357,7 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
     // Reset the value of the PEC15 error counter for the next cycle.
     ltc_6813.pec15_error_counter = 0U;
 
-    // Return EXIT_CODE_ERROR if PEC15 errors occur, else return
+    // Return EXIT_CODE_ERROR if PEC15 mismatches occur, else return
     // EXIT_CODE_OK.
     return (ltc_6813.pec15_error_counter > 0U) ? EXIT_CODE_ERROR : EXIT_CODE_OK;
 }
