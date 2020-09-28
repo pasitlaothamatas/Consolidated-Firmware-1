@@ -214,7 +214,7 @@ static ExitCode Io_LTC6813_PollAdcConversion(void)
         ++adc_conversion_timeout_counter;
 
         // Timeout counter threshold of 10 was chosen arbitrarily.
-        if (adc_conversion_timeout_counter >= 50U)
+        if (adc_conversion_timeout_counter >= 10U)
         {
             return EXIT_CODE_TIMEOUT;
         }
