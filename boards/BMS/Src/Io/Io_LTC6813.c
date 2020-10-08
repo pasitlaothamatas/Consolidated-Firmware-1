@@ -115,8 +115,8 @@ static struct LTC6813 ltc_6813;
 static uint16_t Io_CalculatePec15(uint8_t *data, uint32_t size);
 
 /**
- * Transition all LTC6813 chips on the daisy chain from the IDLE state to the READY
- * state.
+ * Transition all LTC6813 chips on the daisy chain from the IDLE state to the
+ * READY state.
  * @return EXIT_CODE_OK if the SCK and NSS pin can be toggled without timing out
  * or errors. Else, EXIT_CODE_UNIMPLEMENTED.
  */
@@ -130,10 +130,10 @@ static ExitCode Io_LTC6813_EnterReadyState(void);
 static ExitCode Io_LTC6813_StartADCConversion(void);
 
 /**
- * Check if all LTC6813 chips in the daisy chain have all completed converting analogue
- * cell voltages to digital voltages.
- * @return EXIT_CODE_OK if all LTC6813 chips on the daisy chain have completed ADC
- * conversions. EXIT_CODE_TIMEOUT if ADC conversions could not be completed
+ * Check if all LTC6813 chips in the daisy chain have all completed converting
+ * analogue cell voltages to digital voltages.
+ * @return EXIT_CODE_OK if all LTC6813 chips on the daisy chain have completed
+ * ADC conversions. EXIT_CODE_TIMEOUT if ADC conversions could not be completed
  * before timing out. EXIT_CODE_UNIMPLEMENTED if the command sent and received
  * to check the status of ADC conversions was not transmitted or received
  * successfully.

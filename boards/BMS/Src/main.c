@@ -224,10 +224,6 @@ int main(void)
         Io_OkStatuses_IsBspdOkEnabled);
 
     Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
-    cell_voltages = App_CellVoltages_Create(
-        Io_LTC6813_Configure, Io_LTC6813_ReadAllCellRegisterGroups,
-        Io_LTC6813_GetCellVoltages);
-    App_CellVoltages_Configure(cell_voltages);
 
     clock = App_SharedClock_Create();
 
