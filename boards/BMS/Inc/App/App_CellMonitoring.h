@@ -9,7 +9,8 @@ struct CellVoltages *App_CellVoltages_Create(
     void (*configure_daisy_chain)(void),
     ExitCode (*calculate_cell_voltages)(void),
     uint16_t *(*get_cell_voltages)(void),
-    uint32_t num_of_daisy_chained_devices);
+    uint32_t num_of_daisy_chained_devices,
+    uint32_t num_of_cell_voltages_per_chip);
 
 void App_CellVoltages_Configure(struct CellVoltages *cell_voltages);
 
