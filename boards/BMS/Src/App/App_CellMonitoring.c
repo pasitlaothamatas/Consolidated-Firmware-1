@@ -8,19 +8,23 @@ struct CellVoltages
     void (*configure_daisy_chain)(void);
     ExitCode (*read_cell_voltages)(void);
 
-    uint16_t *accumulator_voltages;
+    // A pointer to the 2D array containing the measured cell voltages for each cell monitoring IC.
+    float *accumulator_voltages;
     uint32_t  num_of_accumulator_segments;
     uint32_t  num_of_cell_voltages_per_chip;
+    uint32_t  num_of_cells_per_daisy_chain;
 
-    float  pack_voltage;
+
+    // An array containing the average cell voltage (V) for each accumulator segment.
     float *average_segment_voltages;
     float  average_cell_voltage;
+    float  pack_voltage;
     float  max_cell_voltage;
     float  min_cell_voltage;
 };
 
 static float App_CalculateAverage(
-    float *  array,
+    float    array[],
     uint32_t num_of_samples,
     uint32_t array_size)
 {
@@ -40,7 +44,7 @@ static float App_CalculateAverage(
 struct CellVoltages *App_CellVoltages_Create(
     void (*configure_daisy_chain)(void),
     ExitCode (*calculate_cell_voltages)(void),
-    uint16_t *(*get_cell_voltages)(void),
+    float *(*get_cell_voltages)(void),
     uint32_t num_of_daisy_chained_devices,
     uint32_t num_of_cell_voltages_per_chip)
 {
@@ -59,11 +63,15 @@ struct CellVoltages *App_CellVoltages_Create(
     assert(cell_voltages->average_segment_voltages != NULL);
 
     cell_voltages->num_of_accumulator_segments = num_of_daisy_chained_devices;
-    cell_voltages->num_of_cell_voltages_per_chip = num_of_cell_voltages_per_chip;
-    cell_voltages->pack_voltage                = 0.0f;
-    cell_voltages->max_cell_voltage            = 0.0f;
-    cell_voltages->min_cell_voltage            = 0.0f;
-    cell_voltages->average_cell_voltage        = 0.0f;
+    cell_voltages->num_of_cell_voltages_per_chip =
+        num_of_cell_voltages_per_chip;
+    cell_voltages->num_of_cells_per_daisy_chain =
+        num_of_cell_voltages_per_chip * num_of_daisy_chained_devices;
+
+    cell_voltages->pack_voltage         = 0.0f;
+    cell_voltages->max_cell_voltage     = 0.0f;
+    cell_voltages->min_cell_voltage     = 0.0f;
+    cell_voltages->average_cell_voltage = 0.0f;
 
     return cell_voltages;
 }
@@ -87,14 +95,10 @@ ExitCode
 
 void App_CellVoltages_Tick(struct CellVoltages *cell_voltages)
 {
-    // Get the accumulator's minimum cell voltage.
-    float *segment_cell_voltages =
-        (float *)(&cell_voltages->accumulator_voltages[0]);
+    // Get the pointer to the 2D array containing the cell voltages for each cell monitoring IC.
+    float *segment_cell_voltages = (float *)(cell_voltages->accumulator_voltages);
     float min_cell_voltage = *segment_cell_voltages;
-    for (size_t i = 1U;
-         i < cell_voltages->num_of_accumulator_segments *
-                 cell_voltages->num_of_cell_voltages_per_chip;
-         i++)
+    for (size_t i = 1U; i < cell_voltages->num_of_cells_per_daisy_chain; i++)
     {
         float current_cell_voltage = segment_cell_voltages[i];
         if (min_cell_voltage > current_cell_voltage)
@@ -106,10 +110,7 @@ void App_CellVoltages_Tick(struct CellVoltages *cell_voltages)
 
     // Get the accumulator's maximum cell voltage.
     float max_cell_voltage = *segment_cell_voltages;
-    for (size_t i = 1U;
-         i < cell_voltages->num_of_cell_voltages_per_chip *
-             cell_voltages->num_of_accumulator_segments;
-         i++)
+    for (size_t i = 1U; i < cell_voltages->num_of_cells_per_daisy_chain; i++)
     {
         float current_cell_voltage = segment_cell_voltages[i];
         if (max_cell_voltage < current_cell_voltage)
@@ -125,11 +126,9 @@ void App_CellVoltages_Tick(struct CellVoltages *cell_voltages)
          current_segment++)
     {
         segment_cell_voltages =
-            (float
-                 *)(&cell_voltages->accumulator_voltages
-                         [current_segment *
-                          cell_voltages
-                              ->num_of_cell_voltages_per_chip]);
+            (float *)(&cell_voltages->accumulator_voltages
+                           [current_segment *
+                            cell_voltages->num_of_cell_voltages_per_chip]);
 
         cell_voltages->average_segment_voltages[current_segment] =
             App_CalculateAverage(
@@ -148,8 +147,7 @@ void App_CellVoltages_Tick(struct CellVoltages *cell_voltages)
     // Calculate the pack voltage of the accumulator.
     cell_voltages->pack_voltage =
         cell_voltages->average_cell_voltage *
-        (float)cell_voltages->num_of_accumulator_segments *
-        (float)cell_voltages->num_of_cell_voltages_per_chip;
+        (float)cell_voltages->num_of_cells_per_daisy_chain;
 }
 
 float *App_CellVoltages_GetAverageSegmentVoltages(
