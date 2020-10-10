@@ -14,6 +14,7 @@ struct BmsWorld
     struct OkStatus *         bms_ok;
     struct OkStatus *         imd_ok;
     struct OkStatus *         bspd_ok;
+    struct CellVoltages *     cell_monitor;
     struct Clock *            clock;
 };
 
@@ -27,7 +28,9 @@ struct BmsWorld *App_BmsWorld_Create(
     struct OkStatus *const          bms_ok,
     struct OkStatus *const          imd_ok,
     struct OkStatus *const          bspd_ok,
+    struct CellVoltages *const      cell_monitor,
     struct Clock *const             clock)
+
 {
     struct BmsWorld *world = (struct BmsWorld *)malloc(sizeof(struct BmsWorld));
     assert(world != NULL);
@@ -41,6 +44,7 @@ struct BmsWorld *App_BmsWorld_Create(
     world->bms_ok            = bms_ok;
     world->imd_ok            = imd_ok;
     world->bspd_ok           = bspd_ok;
+    world->cell_monitor      = cell_monitor;
     world->clock             = clock;
 
     return world;
@@ -99,6 +103,12 @@ struct OkStatus *
     App_BmsWorld_GetBspdOkStatus(const struct BmsWorld *const world)
 {
     return world->bspd_ok;
+}
+
+struct CellVoltages *
+    App_BmsWorld_GetCellMonitor(const struct BmsWorld *const world)
+{
+    return world->cell_monitor;
 }
 
 struct Clock *App_BmsWorld_GetClock(const struct BmsWorld *const world)
