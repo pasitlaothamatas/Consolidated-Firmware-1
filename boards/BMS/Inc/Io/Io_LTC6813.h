@@ -22,7 +22,7 @@ void Io_LTC6813_Configure(void);
 
 /**
  * Read all cell register groups for each chip on the daisy chain.
- * @return EXIT_CODE_OK if no PEC15 mismatches occur. Else, return
+ * @return EXIT_CODE_OK if no PEC15 mismatches were detected. Else, return
  * EXIT_CODE_ERROR.
  */
 ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void);

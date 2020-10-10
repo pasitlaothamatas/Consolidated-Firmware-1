@@ -8,7 +8,7 @@
 #include "App_Charger.h"
 #include "App_OkStatus.h"
 #include "App_SharedClock.h"
-#include "App_ReadCell.h"
+#include "App_CellVoltages.h"
 #include "App_SharedWaitSignal.h"
 
 struct BmsWorld;
@@ -32,7 +32,6 @@ struct BmsWorld *App_BmsWorld_Create(
     struct OkStatus *         bms_ok,
     struct OkStatus *         imd_ok,
     struct OkStatus *         bspd_ok,
-    struct CellVoltages *     cell_monitor,
     struct Clock *            clock);
 
 /**
@@ -107,11 +106,19 @@ struct OkStatus *App_BmsWorld_GetImdOkStatus(const struct BmsWorld *world);
 struct OkStatus *App_BmsWorld_GetBspdOkStatus(const struct BmsWorld *world);
 
 /**
- * Get the Cell Monitoring device for the given world
+ * Get the read cell device for the given world
  * @param world The world to get the cell monitoring device from
  * @return The cell monitoring device
  */
-struct CellVoltages *App_BmsWorld_GetCellMonitor(const struct BmsWorld *world);
+struct CellVoltages *App_BmsWorld_GetReadCell(const struct BmsWorld *world);
+
+/**
+ * Get the cell monitoring device for the given world
+ * @param world The world to
+ * @return
+ */
+struct CellVoltages *
+    App_BmsWorld_GetCellMonitoring(const struct BmsWorld *world);
 
 /**
  * Get the clock for the given world

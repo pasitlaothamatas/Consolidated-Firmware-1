@@ -5,7 +5,6 @@
 struct CellVoltages
 {
     uint16_t *measured_cells;
-    uint32_t  num_of_segments;
     uint32_t  num_of_cells_per_segment;
     uint32_t  total_num_of_cells;
 
@@ -52,15 +51,13 @@ static float App_CalculateAverage(float array[], uint32_t array_size)
 
 void App_CellVoltages_Init(
     uint16_t *(*get_cell_voltages)(void),
-    uint32_t num_of_segments,
     uint32_t num_of_cells_per_segment)
 {
     // Get the pointer to the cell voltages read back from the cell monitoring
     // daisy chain.
     voltages.measured_cells           = get_cell_voltages();
-    voltages.num_of_segments          = num_of_segments;
     voltages.num_of_cells_per_segment = num_of_cells_per_segment;
-    voltages.total_num_of_cells = num_of_cells_per_segment * num_of_segments;
+    voltages.total_num_of_cells = num_of_cells_per_segment * NUM_OF_SEGMENTS;
 
     // Initialize average cell voltage values.
     for (size_t i = 0U; i < NUM_OF_SEGMENTS; i++)
@@ -124,8 +121,8 @@ void App_CellVoltages_Tick(void)
 
     // Calculate the average cell voltage. Use the previously calculated segment
     // voltages to compute the average measured cell voltage.
-    voltages.average_cell = App_CalculateAverage(
-        voltages.average_segment, voltages.num_of_segments);
+    voltages.average_cell =
+        App_CalculateAverage(voltages.average_segment, NUM_OF_SEGMENTS);
 
     // Calculate the pack voltage of the accumulator.
     voltages.pack = voltages.average_cell * (float)voltages.total_num_of_cells;
