@@ -1,7 +1,5 @@
 #pragma once
 
-#include "App_SharedExitCode.h"
-
 struct InRangeCheck;
 
 enum InRangeCheck_Status

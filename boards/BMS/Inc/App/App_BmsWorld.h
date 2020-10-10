@@ -8,7 +8,7 @@
 #include "App_Charger.h"
 #include "App_OkStatus.h"
 #include "App_SharedClock.h"
-#include "App_CellMonitoring.h"
+#include "App_ReadCell.h"
 #include "App_SharedWaitSignal.h"
 
 struct BmsWorld;

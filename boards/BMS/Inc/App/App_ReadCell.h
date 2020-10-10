@@ -5,17 +5,14 @@
 
 struct CellVoltages;
 
-struct CellVoltages *App_CellVoltages_Create(
+struct CellVoltages *App_ReadCells_Create(
     void (*configure_daisy_chain)(void),
-    ExitCode (*calculate_cell_voltages)(void),
-    float *(*get_cell_voltages)(void),
-    uint32_t num_of_daisy_chained_devices,
-    uint32_t num_of_cell_voltages_per_chip);
+    ExitCode (*calculate_cell_voltages)(void));
 
-void App_CellVoltages_Configure(struct CellVoltages *cell_voltages);
+void App_ReadCells_Configure(const struct CellVoltages *cell_voltages);
 
-ExitCode
-    App_CellVoltages_CalculateCellVoltages(struct CellVoltages *cell_voltages);
+ExitCode App_ReadCells_ReadCellVoltages(
+    const struct CellVoltages *const cell_voltages);
 
 /**
  * Get the pointer to the the given segment of the accumulator containing cell
@@ -24,6 +21,6 @@ ExitCode
  * @param segment_index The segment.
  * @return
  */
-uint16_t *App_CellVoltages_GetAverageSegmentCellVoltages(
+uint16_t *App_ReadCells_GetAverageSegmentCellVoltages(
     struct CellVoltages *cell_voltages,
     size_t               segment_index);
