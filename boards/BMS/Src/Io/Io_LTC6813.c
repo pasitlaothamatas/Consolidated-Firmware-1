@@ -76,17 +76,26 @@ static const struct LookupTables lookup_tables = {
 #define NUM_OF_PEC15_BYTES_PER_CMD 2U
 #define NUM_OF_CELL_VOLTAGE_RX_BYTES 8U
 
-#define ADCOPT 2U
+// MD currently sets the ADC to fast mode.
+#define MD 2U
 #define DCP 0U
-#define CELL_CH_ALL 0U
+
+// CH configured to convert all voltage channels on the ADC.
+#define CH 0U
+
+// The REFON bit is set to 1 so the ADC can quickly initiate ADC conversions.
 #define REFON 1U
 #define DTEN 0U
 #define CELL_UNDERVOLTAGE_THRESHOLD 0x4E1
 #define CELL_OVERVOLTAGE_THRESHOLD 0x8CA
 
 #define WRCFGA 0x01
-#define ADCV (0x260 + (ADCOPT << 7) + (DCP << 4) + CELL_CH_ALL)
+#define ADCV (0x260 + (MD << 7) + (DCP << 4) + CH)
 #define PLADC 0x1407
+
+// CHST configured to convert only ITMP.
+#define CHST 0U
+#define ADSTAT (0x468 + (MD << 7) + CHST)
 
 // Timeout counter threshold of 10 was chosen arbitrarily.
 // TODO: Determine the appropriate number of ADC conversion timeout cycles #674
@@ -131,7 +140,7 @@ static ExitCode Io_LTC6813_EnterReadyState(void);
  * LTC6813 daisy chain without errors or timing out. Else,
  * EXIT_CODE_UNIMPLEMENTED.
  */
-static ExitCode Io_LTC6813_StartADCConversion(void);
+static ExitCode Io_LTC6813_StartCellVoltageADCConversion(void);
 
 /**
  * Check if all LTC6813 chips in the daisy chain have all completed ADC
@@ -163,7 +172,7 @@ static uint16_t Io_CalculatePec15(uint8_t *data_buffer, uint32_t size)
             (pec15_remainder << 8) ^ lookup_tables.crc[pec15_lut_index]);
     }
 
-    // Set the LSB of the PEC15 remainder to 0.
+    // Set the LSB of the PEC15 remainder to 0. Refer to "Table 30. Write/Read PEC Format."
     return (uint16_t)(pec15_remainder << 1);
 }
 
@@ -184,7 +193,7 @@ static ExitCode Io_LTC6813_EnterReadyState(void)
     return EXIT_CODE_OK;
 }
 
-static ExitCode Io_LTC6813_StartADCConversion(void)
+static ExitCode Io_LTC6813_StartCellVoltageADCConversion(void)
 {
     uint8_t tx_cmd[NUM_OF_CMD_BYTES];
     tx_cmd[0] = (uint8_t)(ADCV >> 8);
@@ -199,6 +208,22 @@ static ExitCode Io_LTC6813_StartADCConversion(void)
             HAL_OK)
                ? EXIT_CODE_OK
                : EXIT_CODE_TIMEOUT;
+}
+
+static ExitCode Io_LTC6813_StartDieTempADCConversion(void)
+{
+    uint8_t tx_cmd[NUM_OF_CMD_BYTES];
+    tx_cmd[0] = (uint8_t)(ADSTAT >> 8);
+    tx_cmd[1] = (uint8_t)ADSTAT;
+
+    uint16_t tx_cmd_pec15 = Io_CalculatePec15(tx_cmd,  NUM_OF_PEC15_BYTES_PER_CMD);
+    tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
+    tx_cmd[3] = (uint8_t)tx_cmd_pec15;
+
+    return (Io_SharedSpi_Transmit(ltc_6813.spi, tx_cmd, NUM_OF_CMD_BYTES) ==
+            HAL_OK)
+           ? EXIT_CODE_OK
+           : EXIT_CODE_TIMEOUT;
 }
 
 static ExitCode Io_LTC6813_PollAdcConversion(void)
@@ -367,7 +392,7 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
     ltc_6813.pec15_error_counter = 0U;
 
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
-    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartADCConversion())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartCellVoltageADCConversion())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
 
     for (size_t current_register_group = CELL_VOLTAGE_REGISTER_GROUP_A;
@@ -403,6 +428,13 @@ ExitCode Io_LTC6813_ReadAllCellRegisterGroups(void)
     // Return EXIT_CODE_ERROR if PEC15 mismatches occur, else return
     // EXIT_CODE_OK.
     return (ltc_6813.pec15_error_counter > 0U) ? EXIT_CODE_ERROR : EXIT_CODE_OK;
+}
+
+ExitCode Io_LTC6813_ReadInternalDieTemperature(void)
+{
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartCellVoltageADCConversion())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
 }
 
 uint16_t *Io_LTC6813_GetCellVoltages(void)
