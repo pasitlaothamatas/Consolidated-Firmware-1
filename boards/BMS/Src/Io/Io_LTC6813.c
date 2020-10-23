@@ -77,7 +77,6 @@ uint16_t Io_CalculatePec15(uint8_t *data_buffer, uint32_t size)
             (pec15_remainder << 8) ^ lookup_tables.crc[pec15_lut_index]);
     }
 
-
     // Set the LSB of the PEC15 remainder to 0.
     return (uint16_t)(pec15_remainder << 1);
 }
