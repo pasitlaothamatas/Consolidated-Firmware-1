@@ -30,12 +30,14 @@ static void DriveStateRunOnTick100Hz(struct StateMachine *const state_machine)
     App_SetPeriodicCanSignals_Imd(can_tx, imd);
     App_SetPeriodicSignals_CellMonitorInRangeChecks(can_tx, cell_monitor);
 
-    //if (App_CanTx_GetPeriodicSignal_MAX_CELL_VOLTAGE_OUT_OF_RANGE(can_tx) !=
-    //        CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_MAX_CELL_VOLTAGE_OUT_OF_RANGE_OK_CHOICE ||
+    // if (App_CanTx_GetPeriodicSignal_MAX_CELL_VOLTAGE_OUT_OF_RANGE(can_tx) !=
+    //        CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_MAX_CELL_VOLTAGE_OUT_OF_RANGE_OK_CHOICE
+    //        ||
     //    App_CanTx_GetPeriodicSignal_MIN_CELL_VOLTAGE_OUT_OF_RANGE(can_tx) !=
     //        CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_MIN_CELL_VOLTAGE_OUT_OF_RANGE_OK_CHOICE)
     //{
-    //    App_SharedStateMachine_SetNextState(state_machine, App_GetFaultState());
+    //    App_SharedStateMachine_SetNextState(state_machine,
+    //    App_GetFaultState());
     //}
 }
 

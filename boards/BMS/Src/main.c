@@ -38,7 +38,7 @@
 #include "Io_RgbLedSequence.h"
 #include "Io_Charger.h"
 #include "Io_OkStatuses.h"
-#include "Io_LTC6813.h"
+#include "Io_LTC6813Voltages.h"
 
 #include "App_BmsWorld.h"
 #include "App_CellVoltages.h"
