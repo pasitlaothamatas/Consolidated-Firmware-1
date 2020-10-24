@@ -3,7 +3,7 @@
 #include "Io_LTC6813.h"
 #include "Io_CellTemperatures.h"
 
-static uint16_t internal_die_temperatures[NUM_OF_LTC6813];
+static uint16_t internal_die_temperatures[NUM_OF_CELL_MONITORING_IC];
 
 ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
 {
@@ -13,7 +13,10 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
 
-    uint8_t rx_internal_die_temp[NUM_OF_RX_BYTES * NUM_OF_LTC6813] = { 0 };
+    uint8_t
+        rx_internal_die_temp[NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC] = {
+            0
+        };
     uint8_t tx_cmd[NUM_OF_CMD_BYTES];
 
     tx_cmd[0] = (uint8_t)(RDSTATA >> 8);
@@ -23,12 +26,13 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
     tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
     tx_cmd[3] = (uint8_t)(tx_cmd_pec15);
 
-    for (size_t current_ic = 0; current_ic < NUM_OF_LTC6813; current_ic++)
+    for (size_t current_ic = 0; current_ic < NUM_OF_CELL_MONITORING_IC;
+         current_ic++)
     {
         if (Io_SharedSpi_TransmitAndReceive(
                 Io_LTC6813_GetSpiInterface(), tx_cmd, NUM_OF_CMD_BYTES,
                 rx_internal_die_temp,
-                NUM_OF_RX_BYTES * NUM_OF_LTC6813) != HAL_OK)
+                NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC) != HAL_OK)
         {
             return EXIT_CODE_ERROR;
         }

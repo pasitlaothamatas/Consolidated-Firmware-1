@@ -93,8 +93,8 @@ ExitCode Io_LTC6813_EnterReadyState(void)
     uint8_t rx_data;
 
     // Generate isoSPI traffic to wake up the daisy chain by sending a command
-    // to read a single byte NUM_OF_LTC6813 times.
-    for (size_t i = 0U; i < NUM_OF_LTC6813; i++)
+    // to read a single byte NUM_OF_CELL_MONITORING_IC times.
+    for (size_t i = 0U; i < NUM_OF_CELL_MONITORING_IC; i++)
     {
         if (Io_SharedSpi_Receive(spi_interface, &rx_data, 1U) != HAL_OK)
         {
@@ -202,7 +202,7 @@ ExitCode Io_LTC6813_ConfigureRegisterA(void)
 
     // Transmit the payload data to all devices connected to the daisy chain.
     if (Io_SharedSpi_MultipleTransmitWithoutNssToggle(
-            spi_interface, tx_payload, 8U, NUM_OF_LTC6813) != HAL_OK)
+            spi_interface, tx_payload, 8U, NUM_OF_CELL_MONITORING_IC) != HAL_OK)
     {
         Io_SharedSpi_SetNssHigh(spi_interface);
         return EXIT_CODE_ERROR;
