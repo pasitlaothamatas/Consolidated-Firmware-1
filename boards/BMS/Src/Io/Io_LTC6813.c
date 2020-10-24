@@ -3,6 +3,8 @@
 #include <string.h>
 #include "Io_LTC6813.h"
 #include "Io_SharedSpi.h"
+
+#include "configs/App_CellConfigs.h"
 #include "configs/Io_LTC6813Configs.h"
 
 #define ADCOPT 0U
@@ -94,7 +96,7 @@ ExitCode Io_LTC6813_EnterReadyState(void)
 
     // Generate isoSPI traffic to wake up the daisy chain by sending a command
     // to read a single byte NUM_OF_CELL_MONITORING_IC times.
-    for (size_t i = 0U; i < NUM_OF_CELL_MONITORING_IC; i++)
+    for (size_t i = 0U; i < NUM_OF_CELL_MONITORING_ICS; i++)
     {
         if (Io_SharedSpi_Receive(spi_interface, &rx_data, 1U) != HAL_OK)
         {
@@ -202,7 +204,8 @@ ExitCode Io_LTC6813_ConfigureRegisterA(void)
 
     // Transmit the payload data to all devices connected to the daisy chain.
     if (Io_SharedSpi_MultipleTransmitWithoutNssToggle(
-            spi_interface, tx_payload, 8U, NUM_OF_CELL_MONITORING_IC) != HAL_OK)
+            spi_interface, tx_payload, 8U, NUM_OF_CELL_MONITORING_ICS) !=
+        HAL_OK)
     {
         Io_SharedSpi_SetNssHigh(spi_interface);
         return EXIT_CODE_ERROR;

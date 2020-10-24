@@ -3,7 +3,9 @@
 #include "Io_LTC6813.h"
 #include "Io_CellTemperatures.h"
 
-static uint16_t internal_die_temperatures[NUM_OF_CELL_MONITORING_IC];
+#include "configs/App_CellConfigs.h"
+
+static uint16_t internal_die_temperatures[NUM_OF_CELL_MONITORING_ICS];
 
 ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
 {
@@ -11,10 +13,11 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
     uint32_t RDSTATA = 0x0010;
 
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
+    RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartInternalDieTemperatureConversion())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
 
     uint8_t
-        rx_internal_die_temp[NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC] = {
+        rx_internal_die_temp[NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS] = {
             0
         };
     uint8_t tx_cmd[NUM_OF_CMD_BYTES];
@@ -26,13 +29,13 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
     tx_cmd[2] = (uint8_t)(tx_cmd_pec15 >> 8);
     tx_cmd[3] = (uint8_t)(tx_cmd_pec15);
 
-    for (size_t current_ic = 0; current_ic < NUM_OF_CELL_MONITORING_IC;
+    for (size_t current_ic = 0; current_ic < NUM_OF_CELL_MONITORING_ICS;
          current_ic++)
     {
         if (Io_SharedSpi_TransmitAndReceive(
                 Io_LTC6813_GetSpiInterface(), tx_cmd, NUM_OF_CMD_BYTES,
                 rx_internal_die_temp,
-                NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC) != HAL_OK)
+                NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS) != HAL_OK)
         {
             return EXIT_CODE_ERROR;
         }
@@ -43,6 +46,8 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
                                      (uint32_t)((rx_internal_die_temp[3] << 8));
         internal_die_temperatures[current_ic] = (uint16_t)internal_die_temp;
 
+        // The upper 8 bytes of the PEC15 code read back is stored in the 6th
+        // index, while the lower bytes are stored in the 7th index.
         uint32_t received_pec15 = (uint32_t)(rx_internal_die_temp[6] << 8) |
                                   (uint32_t)(rx_internal_die_temp[7]);
 

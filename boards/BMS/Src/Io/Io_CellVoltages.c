@@ -3,11 +3,12 @@
 #include "Io_SharedSpi.h"
 #include "Io_LTC6813.h"
 #include "Io_CellVoltages.h"
+#include "configs/App_CellConfigs.h"
 
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
 
-static uint16_t cell_voltages[NUM_OF_CELL_MONITORING_IC]
-                             [NUM_OF_CELLS_PER_IC] = { { 0 } };
+static uint16_t cell_voltages[NUM_OF_CELL_MONITORING_ICS]
+                             [NUM_OF_CELLS_READ_PER_IC] = { { 0 } };
 
 // clang-format off
 static const uint16_t cell_voltage_register_group_commands
@@ -34,7 +35,7 @@ static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
     size_t current_ic,
     size_t current_register_group,
     uint8_t
-        rx_cell_voltages[static NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC]);
+        rx_cell_voltages[static NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS]);
 
 static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
     size_t  current_ic,
@@ -47,7 +48,7 @@ static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
          current_cell < NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP; current_cell++)
     {
         assert(
-            cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC);
+            cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS);
         uint32_t cell_voltage =
             (uint32_t)(rx_cell_voltages[cell_voltage_index]) |
             (uint32_t)((rx_cell_voltages[cell_voltage_index + 1] << 8));
@@ -64,7 +65,7 @@ static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
         cell_voltage_index += 2U;
     }
 
-    assert(cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC);
+    assert(cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS);
     uint32_t received_pec15 =
         (uint32_t)(rx_cell_voltages[cell_voltage_index] << 8) |
         (uint32_t)(rx_cell_voltages[cell_voltage_index + 1]);
@@ -82,7 +83,7 @@ ExitCode Io_CellVoltages_ReadCellVoltages(void)
 {
     uint16_t cell_register_group_cmd;
     uint8_t  tx_cmd[NUM_OF_CMD_BYTES];
-    uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC] = {
+    uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS] = {
         0
     };
 
@@ -107,12 +108,12 @@ ExitCode Io_CellVoltages_ReadCellVoltages(void)
         if (Io_SharedSpi_TransmitAndReceive(
                 Io_LTC6813_GetSpiInterface(), tx_cmd, NUM_OF_CMD_BYTES,
                 rx_cell_voltages,
-                NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_IC) != HAL_OK)
+                NUM_OF_RX_BYTES * NUM_OF_CELL_MONITORING_ICS) != HAL_OK)
         {
             return EXIT_CODE_ERROR;
         }
 
-        for (size_t current_ic = 0U; current_ic < NUM_OF_CELL_MONITORING_IC;
+        for (size_t current_ic = 0U; current_ic < NUM_OF_CELL_MONITORING_ICS;
              current_ic++)
         {
             if (Io_LTC6813_ParseCellsAndPerformPec15Check(

@@ -1,7 +1,5 @@
 #pragma once
 
-#define NUM_OF_CELL_MONITORING_IC 2U
-#define NUM_OF_CELLS_PER_IC 16U
 #define NUM_OF_CMD_BYTES 4U
 #define NUM_OF_RX_BYTES 8U
 #define NUM_OF_PEC15_BYTES_PER_CMD 2U
