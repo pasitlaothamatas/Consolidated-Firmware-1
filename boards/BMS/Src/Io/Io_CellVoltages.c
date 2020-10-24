@@ -4,7 +4,6 @@
 #include "Io_LTC6813.h"
 #include "Io_CellVoltages.h"
 
-#define NUM_OF_CELL_VOLTAGE_RX_BYTES 8U
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
 
 static uint16_t cell_voltages[NUM_OF_LTC6813]
@@ -24,32 +23,31 @@ static const uint16_t cell_voltage_register_group_commands
 // clang-format on
 
 /**
- *
- * @param current_ic
- * @param current_register_group
- * @param pec15_error_counter
- * @param rx_cell_voltages
+ * Parse the acquired cell voltages and perform PEC15 values.
+ * @param current_ic The current IC to acquire cell voltages for.
+ * @param current_register_group The current register groups to acquire cell
+ * voltages for.
+ * @param pec15_error_counter A pointer to a counter storing the number of times
+ * PEC15 checks have failed.
+ * @param rx_cell_voltages A pointer to an array storing the cell voltages for
+ * the current register group for the current IC.
  */
-static void Io_LTC6813_ParseCellsAndPerformPec15Check(
-    size_t    current_ic,
-    size_t    current_register_group,
-    uint32_t *pec15_error_counter,
-    uint8_t
-        rx_cell_voltages[static NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813]);
+static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
+    size_t  current_ic,
+    size_t  current_register_group,
+    uint8_t rx_cell_voltages[static NUM_OF_RX_BYTES * NUM_OF_LTC6813]);
 
-static void Io_LTC6813_ParseCellsAndPerformPec15Check(
-    size_t    current_ic,
-    size_t    current_register_group,
-    uint32_t *pec15_error_counter,
-    uint8_t   rx_cell_voltages[])
+static ExitCode Io_LTC6813_ParseCellsAndPerformPec15Check(
+    size_t  current_ic,
+    size_t  current_register_group,
+    uint8_t rx_cell_voltages[])
 {
-    size_t cell_voltage_index = current_ic * NUM_OF_CELL_VOLTAGE_RX_BYTES;
+    size_t cell_voltage_index = current_ic * NUM_OF_RX_BYTES;
 
     for (size_t current_cell = 0U;
          current_cell < NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP; current_cell++)
     {
-        assert(
-            cell_voltage_index < NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813);
+        assert(cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_LTC6813);
         uint32_t cell_voltage =
             (uint32_t)(rx_cell_voltages[cell_voltage_index]) |
             (uint32_t)((rx_cell_voltages[cell_voltage_index + 1] << 8));
@@ -66,32 +64,25 @@ static void Io_LTC6813_ParseCellsAndPerformPec15Check(
         cell_voltage_index += 2U;
     }
 
-    assert(cell_voltage_index < NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813);
+    assert(cell_voltage_index < NUM_OF_RX_BYTES * NUM_OF_LTC6813);
     uint32_t received_pec15 =
         (uint32_t)(rx_cell_voltages[cell_voltage_index] << 8) |
         (uint32_t)(rx_cell_voltages[cell_voltage_index + 1]);
 
     // Calculate the PEC15 using the first 6 bytes of data received from the
     // chip.
-    uint32_t calculated_pec15 = Io_CalculatePec15(
-        &rx_cell_voltages[current_ic * NUM_OF_CELL_VOLTAGE_RX_BYTES], 6U);
+    uint32_t calculated_pec15 =
+        Io_CalculatePec15(&rx_cell_voltages[current_ic * NUM_OF_RX_BYTES], 6U);
 
-    if (received_pec15 != calculated_pec15)
-    {
-        *pec15_error_counter = *pec15_error_counter + 1;
-    }
+    return (received_pec15 == calculated_pec15) ? EXIT_CODE_OK
+                                                : EXIT_CODE_ERROR;
 }
 
 ExitCode Io_LTC6813_ReadCellVoltages(void)
 {
     uint16_t cell_register_group_cmd;
     uint8_t  tx_cmd[NUM_OF_CMD_BYTES];
-    uint8_t  rx_cell_voltages[NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813] = {
-        0
-    };
-
-    // Reset the value of the PEC15 error counter at the start of each cycle.
-    uint32_t pec15_error_counter = 0U;
+    uint8_t  rx_cell_voltages[NUM_OF_RX_BYTES * NUM_OF_LTC6813] = { 0 };
 
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartADCConversion())
@@ -113,23 +104,23 @@ ExitCode Io_LTC6813_ReadCellVoltages(void)
 
         if (Io_SharedSpi_TransmitAndReceive(
                 Io_LTC6813_GetSpiInterface(), tx_cmd, NUM_OF_CMD_BYTES,
-                rx_cell_voltages,
-                NUM_OF_CELL_VOLTAGE_RX_BYTES * NUM_OF_LTC6813) != HAL_OK)
+                rx_cell_voltages, NUM_OF_RX_BYTES * NUM_OF_LTC6813) != HAL_OK)
         {
-            return EXIT_CODE_TIMEOUT;
+            return EXIT_CODE_ERROR;
         }
 
         for (size_t current_ic = 0U; current_ic < NUM_OF_LTC6813; current_ic++)
         {
-            Io_LTC6813_ParseCellsAndPerformPec15Check(
-                current_ic, current_register_group, &pec15_error_counter,
-                rx_cell_voltages);
+            if (Io_LTC6813_ParseCellsAndPerformPec15Check(
+                    current_ic, current_register_group, rx_cell_voltages) !=
+                EXIT_CODE_OK)
+            {
+                return EXIT_CODE_ERROR;
+            }
         }
     }
 
-    // Return EXIT_CODE_ERROR if PEC15 mismatches occur, else return
-    // EXIT_CODE_OK.
-    return (pec15_error_counter > 0U) ? EXIT_CODE_ERROR : EXIT_CODE_OK;
+    return EXIT_CODE_OK;
 }
 
 uint16_t *Io_LTC6813_GetCellVoltages(void)
