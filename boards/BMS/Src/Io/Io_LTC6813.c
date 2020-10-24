@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include "Io_LTC6813.h"
 #include "Io_SharedSpi.h"
 #include "configs/Io_LTC6813Configs.h"
@@ -102,7 +101,7 @@ struct LTC6813
     uint8_t pec15_error_counter;
 
     // An array containing cell voltages for each LTC6813 IC.
-    uint16_t cell_voltages[NUM_OF_LTC6813][NUM_OF_CELLS_PER_LTC6813];
+    uint16_t cell_voltages[NUM_OF_LTC6813][NUM_OF_CELLS_READ_PER_LTC6813];
 };
 
 static struct LTC6813 ltc_6813;
@@ -296,11 +295,11 @@ void Io_LTC6813_Init(
     assert(spi_handle != NULL);
 
     ltc_6813.spi = Io_SharedSpi_Create(
-        spi_handle, nss_port, nss_pin, LTC6813_SPI_TIMEOUT_MS);
+        spi_handle, nss_port, nss_pin, SPI_TIMEOUT_MS_LTC6813);
     ltc_6813.pec15_error_counter = 0U;
     memset(
         ltc_6813.cell_voltages, 0U,
-        NUM_OF_LTC6813 * NUM_OF_CELLS_PER_LTC6813 *
+        NUM_OF_LTC6813 * NUM_OF_CELLS_READ_PER_LTC6813 *
             sizeof(ltc_6813.cell_voltages[0][0]));
 }
 
