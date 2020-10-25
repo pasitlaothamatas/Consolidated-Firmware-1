@@ -1,16 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <App_CellConstants.h>
+#include "configs/App_CellConfigs.h"
 #include "App_CellVoltages.h"
 
-struct CellVoltages
-{
-    uint16_t *measured_cell_voltages;
-    uint32_t  total_num_of_cells;
-    uint32_t  num_of_cells_per_segment;
-};
-
-static struct CellVoltages cell_voltages;
+static uint16_t *measured_cell_voltages;
 
 /**
  * A function used to compute the sum of array elements.
@@ -30,26 +23,20 @@ static float App_SumOfArrayElements(uint16_t *array, uint32_t size)
     return (float)array_sum;
 }
 
-void App_CellVoltages_Init(
-    uint16_t *(*get_cell_voltages)(void),
-    uint32_t num_of_cells_per_segment)
+void App_CellVoltages_Init(uint16_t *(*get_cell_voltages)(void))
 {
     // Get the pointer to the 2D array of cell voltages read back from the cell
     // monitoring daisy chain.
-    cell_voltages.measured_cell_voltages   = get_cell_voltages();
-    cell_voltages.num_of_cells_per_segment = num_of_cells_per_segment;
-    cell_voltages.total_num_of_cells =
-        num_of_cells_per_segment * NUM_OF_CELL_MONITORING_ICS;
+    measured_cell_voltages = get_cell_voltages();
 }
 
 float App_CellVoltages_GetMinCellVoltage(void)
 {
-    uint16_t min_cell_voltage = cell_voltages.measured_cell_voltages[0];
-    for (size_t current_cell = 1U;
-         current_cell < cell_voltages.total_num_of_cells; current_cell++)
+    uint16_t min_cell_voltage = measured_cell_voltages[0];
+    for (size_t current_cell = 1U; current_cell < NUM_OF_CELLS_PER_ACCUMULATOR;
+         current_cell++)
     {
-        uint16_t current_cell_voltage =
-            cell_voltages.measured_cell_voltages[current_cell];
+        uint16_t current_cell_voltage = measured_cell_voltages[current_cell];
         if (min_cell_voltage > current_cell_voltage)
         {
             min_cell_voltage = current_cell_voltage;
@@ -61,12 +48,11 @@ float App_CellVoltages_GetMinCellVoltage(void)
 
 float App_CellVoltages_GetMaxCellVoltage(void)
 {
-    float max_cell_voltage = cell_voltages.measured_cell_voltages[0];
-    for (size_t current_cell = 1U;
-         current_cell < cell_voltages.total_num_of_cells; current_cell++)
+    float max_cell_voltage = measured_cell_voltages[0];
+    for (size_t current_cell = 1U; current_cell < NUM_OF_CELLS_PER_ACCUMULATOR;
+         current_cell++)
     {
-        float current_cell_voltage =
-            cell_voltages.measured_cell_voltages[current_cell];
+        float current_cell_voltage = measured_cell_voltages[current_cell];
         if (max_cell_voltage < current_cell_voltage)
         {
             max_cell_voltage = current_cell_voltage;
@@ -79,32 +65,31 @@ float App_CellVoltages_GetMaxCellVoltage(void)
 float App_CellVoltages_GetPackVoltage(void)
 {
     return (float)App_SumOfArrayElements(
-               cell_voltages.measured_cell_voltages,
-               cell_voltages.total_num_of_cells) /
+               measured_cell_voltages, NUM_OF_CELLS_PER_ACCUMULATOR) /
            10000.0f;
 }
 
 float App_CellVoltages_GetAverageCellVoltage(void)
 {
     return App_CellVoltages_GetPackVoltage() /
-           (float)cell_voltages.total_num_of_cells;
+           (float)NUM_OF_CELLS_PER_ACCUMULATOR;
 }
 
 float App_CellVoltages_GetSegment0Voltage(void)
 {
     return (float)App_SumOfArrayElements(
-               &cell_voltages.measured_cell_voltages
-                    [SEGMENT_0 * cell_voltages.num_of_cells_per_segment],
-               cell_voltages.num_of_cells_per_segment) /
+               &measured_cell_voltages
+                   [CELL_MONITORING_IC_0 * NUM_OF_CELLS_READ_PER_IC],
+               NUM_OF_CELLS_READ_PER_IC) /
            10000.0f;
 }
 
 float App_CellVoltages_GetSegment1Voltage(void)
 {
     return (float)App_SumOfArrayElements(
-               &cell_voltages.measured_cell_voltages
-                    [SEGMENT_1 * cell_voltages.num_of_cells_per_segment],
-               cell_voltages.num_of_cells_per_segment) /
+               &measured_cell_voltages
+                   [CELL_MONITORING_IC_1 * NUM_OF_CELLS_READ_PER_IC],
+               NUM_OF_CELLS_READ_PER_IC) /
            10000.0f;
 }
 

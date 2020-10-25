@@ -15,6 +15,11 @@ static void ChargeStateRunOnEntry(struct StateMachine *const state_machine)
 
 static void ChargeStateRunOnTick1Hz(struct StateMachine *const state_machine)
 {
+    struct BmsWorld *world = App_SharedStateMachine_GetWorld(state_machine);
+    struct CellMonitor * cell_monitor = App_BmsWorld_GetCellMonitor(world);
+
+    App_CellMonitor_ReadCellVoltages(cell_monitor);
+
     App_AllStatesRunOnTick1Hz(state_machine);
 }
 

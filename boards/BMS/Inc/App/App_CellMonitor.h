@@ -132,3 +132,5 @@ struct InRangeCheck *App_CellMonitor_GetMaxCellVoltageInRangeCheck(
  */
 struct InRangeCheck *App_CellMonitor_GetAverageCellVoltageInRangeCheck(
     const struct CellMonitor *cell_monitor);
+
+ExitCode App_CellMonitor_ReadInternalDieTemperatures(const struct CellMonitor * cell_monitor);

@@ -9,9 +9,6 @@ static uint16_t internal_die_temperatures[NUM_OF_CELL_MONITORING_ICS];
 
 ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
 {
-    // The command used to read data from status register A.
-    uint32_t RDSTATA = 0x0010;
-
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_EnterReadyState())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartInternalDieTemperatureConversion())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollAdcConversion())
@@ -21,6 +18,9 @@ ExitCode Io_CellTemperatures_ReadInternalDieTemperatures(void)
             0
         };
     uint8_t tx_cmd[NUM_OF_CMD_BYTES];
+
+    // The command used to read data from status register A.
+    uint32_t RDSTATA = 0x0010;
 
     tx_cmd[0] = (uint8_t)(RDSTATA >> 8);
     tx_cmd[1] = (uint8_t)(RDSTATA);
