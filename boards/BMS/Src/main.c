@@ -37,13 +37,18 @@
 #include "Io_HeartbeatMonitor.h"
 #include "Io_RgbLedSequence.h"
 #include "Io_Charger.h"
+#include "Io_LTC6813.h"
+#include "Io_CellVoltages.h"
+#include "Io_CellTemperatures.h"
 #include "Io_OkStatuses.h"
 
 #include "App_BmsWorld.h"
+#include "App_CellVoltages.h"
 #include "App_SharedStateMachine.h"
 #include "states/App_InitState.h"
 #include "configs/App_HeartbeatMonitorConfig.h"
 #include "configs/App_ImdConfig.h"
+#include "configs/App_CellMonitorThresholds.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +105,7 @@ struct Imd *              imd;
 struct HeartbeatMonitor * heartbeat_monitor;
 struct RgbLedSequence *   rgb_led_sequence;
 struct Charger *          charger;
+struct CellMonitor *      cell_monitor;
 struct OkStatus *         bms_ok;
 struct OkStatus *         imd_ok;
 struct OkStatus *         bspd_ok;
@@ -221,11 +227,27 @@ int main(void)
         Io_OkStatuses_EnableBspdOk, Io_OkStatuses_DisableBspdOk,
         Io_OkStatuses_IsBspdOkEnabled);
 
+    Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
+    App_CellVoltages_Init(Io_CellVoltages_GetCellVoltages);
+    cell_monitor = App_CellMonitor_Create(
+        Io_LTC6813_ConfigureRegisterA, Io_CellVoltages_ReadCellVoltages,
+        Io_CellTemperatures_ReadInternalDieTemperatures,
+        App_CellVoltages_GetMinCellVoltage, App_CellVoltages_GetMaxCellVoltage,
+        App_CellVoltages_GetAverageCellVoltage, App_CellVoltages_GetPackVoltage,
+        App_CellVoltages_GetSegment0Voltage,
+        App_CellVoltages_GetSegment1Voltage,
+        App_CellVoltages_GetSegment2Voltage,
+        App_CellVoltages_GetSegment3Voltage,
+        App_CellVoltages_GetSegment4Voltage,
+        App_CellVoltages_GetSegment5Voltage, MIN_CELL_VOLTAGE, MAX_CELL_VOLTAGE,
+        MIN_SEGMENT_VOLTAGE, MAX_SEGMENT_VOLTAGE, MIN_PACK_VOLTAGE,
+        MAX_PACK_VOLTAGE);
+
     clock = App_SharedClock_Create();
 
     world = App_BmsWorld_Create(
         can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-        bms_ok, imd_ok, bspd_ok, clock);
+        bms_ok, imd_ok, bspd_ok, cell_monitor, clock);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);

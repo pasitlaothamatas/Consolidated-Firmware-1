@@ -113,3 +113,5 @@ HAL_StatusTypeDef Io_SharedSpi_TransmitWithoutNssToggle(
     const struct SharedSpi *spi,
     uint8_t *               tx_buffer,
     uint16_t                tx_buffer_size);
+
+struct SharedSpi *Io_LTC6813_GetSpiInterface(void);
