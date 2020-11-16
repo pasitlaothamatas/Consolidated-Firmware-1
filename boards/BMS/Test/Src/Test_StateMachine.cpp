@@ -555,4 +555,14 @@ TEST_F(BmsStateMachineTest, charger_disconnects_in_charge_state)
         App_SharedStateMachine_GetCurrentState(state_machine));
 }
 
+TEST_F(BmsStateMachineTest, check_accumulator_voltages_can_signals)
+{
+    for (auto &state : GetAllStates())
+    {
+        SetInitialState(state);
+
+        LetTimePass(state_machine, 10);
+    }
+}
+
 } // namespace StateMachineTest

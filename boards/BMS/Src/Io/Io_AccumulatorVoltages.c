@@ -1,11 +1,17 @@
-#include "Io_CellVoltages.h"
+#include "Io_AccumulatorVoltages.h"
 #include "Io_SharedSpi.h"
 #include "Io_LTC6813.h"
 #include "configs/App_AccumulatorConfigs.h"
 #include "configs/Io_LTC6813Configs.h"
 
-#define NUM_OF_CELLS_READ_PER_CHIPS 16U
+#define NUM_OF_CELLS_READ_PER_CHIP 16U
 #define NUM_OF_CELLS_PER_LTC6813_REGISTER_GROUP 3U
+#define NUM_OF_CELLS_PER_ACCUMULATOR \
+    NUM_OF_CELLS_READ_PER_CHIP *NUM_OF_CELL_MONITOR_CHIPS
+
+// This conversion factor is used to convert raw voltages (100µV) to voltages
+// (V).
+#define V_PER_100UV 1E-4f
 
 enum CellVoltageRegisterGroup
 {
@@ -29,7 +35,15 @@ static const uint16_t cell_voltage_register_group_commands
     };
 
 static uint16_t cell_voltages[NUM_OF_CELL_MONITOR_CHIPS]
-                             [NUM_OF_CELLS_READ_PER_CHIPS];
+                             [NUM_OF_CELLS_READ_PER_CHIP];
+
+/**
+ * A function used to compute the sum of array elements.
+ * @param array A pointer to the given array.
+ * @param length The length of the given array.
+ * @return The sum of elements for the given array.
+ */
+static uint32_t App_SumOfArrayElements(uint16_t array[], size_t length);
 
 /**
  * Parse raw cell voltages received from the cell monitoring chip and perform
@@ -43,15 +57,26 @@ static uint16_t cell_voltages[NUM_OF_CELL_MONITOR_CHIPS]
  * @return EXIT_CODE_OK if the PEC15 check was successful. Else,
  * EXIT_CODE_ERROR.
  */
-static ExitCode Io_CellVoltages_ParseRawVoltagesAndDoPec15Check(
+static ExitCode Io_AccumulatorVoltages_ParseRawVoltagesAndDoPec15Check(
     size_t                        current_chip,
     enum CellVoltageRegisterGroup current_register_group,
-    uint8_t                       rx_cell_voltages[]);
+    uint8_t *                     rx_cell_voltages);
 
-static ExitCode Io_CellVoltages_ParseRawVoltagesAndDoPec15Check(
+static uint32_t App_SumOfArrayElements(uint16_t array[], size_t length)
+{
+    uint32_t array_sum = 0U;
+    for (size_t i = 0U; i < length; i++)
+    {
+        array_sum += array[i];
+    }
+
+    return array_sum;
+}
+
+static ExitCode Io_AccumulatorVoltages_ParseRawVoltagesAndDoPec15Check(
     size_t                        current_chip,
     enum CellVoltageRegisterGroup current_register_group,
-    uint8_t                       rx_cell_voltages[])
+    uint8_t *                     rx_cell_voltages)
 {
     size_t cell_voltage_index = current_chip * NUM_OF_RX_BYTES;
 
@@ -104,7 +129,7 @@ static ExitCode Io_CellVoltages_ParseRawVoltagesAndDoPec15Check(
     return EXIT_CODE_OK;
 }
 
-ExitCode Io_CellVoltages_ReadRawCellVoltages(void)
+ExitCode Io_AccumulatorVoltages_ReadRawCellVoltages(void)
 {
     uint16_t cell_register_group_cmd;
     uint8_t  tx_cmd[NUM_OF_CMD_BYTES];
@@ -116,8 +141,7 @@ ExitCode Io_CellVoltages_ReadRawCellVoltages(void)
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_StartCellVoltageConversions())
     RETURN_IF_EXIT_NOT_OK(Io_LTC6813_PollConversions())
 
-    for (enum CellVoltageRegisterGroup current_register_group =
-             CELL_VOLTAGE_REGISTER_GROUP_A;
+    for (size_t current_register_group = 0U;
          current_register_group < NUM_OF_CELL_VOLTAGE_REGISTER_GROUPS;
          current_register_group++)
     {
@@ -140,10 +164,10 @@ ExitCode Io_CellVoltages_ReadRawCellVoltages(void)
             return EXIT_CODE_ERROR;
         }
 
-        for (enum CellMonitorChip current_chip = CELL_MONITOR_CHIP_0;
-             current_chip < NUM_OF_CELL_MONITOR_CHIPS; current_chip++)
+        for (size_t current_chip = 0U; current_chip < NUM_OF_CELL_MONITOR_CHIPS;
+             current_chip++)
         {
-            if (Io_CellVoltages_ParseRawVoltagesAndDoPec15Check(
+            if (Io_AccumulatorVoltages_ParseRawVoltagesAndDoPec15Check(
                     current_chip, current_register_group, rx_cell_voltages) !=
                 EXIT_CODE_OK)
             {
@@ -155,9 +179,93 @@ ExitCode Io_CellVoltages_ReadRawCellVoltages(void)
     return EXIT_CODE_OK;
 }
 
-uint16_t *Io_CellVoltages_GetRawCellVoltages(size_t *column_length)
+float Io_AccumulatorVoltages_GetMinCellVoltage(void)
 {
-    *column_length = NUM_OF_CELLS_READ_PER_CHIPS;
+    uint16_t min_cell_voltage = cell_voltages[0][0];
 
-    return &cell_voltages[0][0];
+    for (size_t current_chip = 0U; current_chip < NUM_OF_CELL_MONITOR_CHIPS;
+         current_chip++)
+    {
+        for (size_t current_cell = 0U;
+             current_cell < NUM_OF_CELLS_PER_ACCUMULATOR; current_cell++)
+        {
+            uint16_t current_cell_voltage =
+                cell_voltages[current_chip][current_cell];
+            if (min_cell_voltage > current_cell_voltage)
+            {
+                min_cell_voltage = current_cell_voltage;
+            }
+        }
+    }
+
+    return min_cell_voltage * V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetMaxCellVoltage(void)
+{
+    uint16_t max_cell_voltage = cell_voltages[0][0];
+
+    for (size_t current_chip = 0U; current_chip < NUM_OF_CELL_MONITOR_CHIPS;
+         current_chip++)
+    {
+        for (size_t current_cell = 0U;
+             current_cell < NUM_OF_CELLS_PER_ACCUMULATOR; current_cell++)
+        {
+            uint16_t current_cell_voltage =
+                cell_voltages[current_chip][current_cell];
+            if (max_cell_voltage < current_cell_voltage)
+            {
+                max_cell_voltage = current_cell_voltage;
+            }
+        }
+    }
+
+    return max_cell_voltage * V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetPackVoltage(void)
+{
+    return (float)App_SumOfArrayElements(
+               &cell_voltages[0][0], NUM_OF_CELLS_PER_ACCUMULATOR) *
+           V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetAverageCellVoltage(void)
+{
+    return Io_AccumulatorVoltages_GetPackVoltage() /
+           NUM_OF_CELLS_PER_ACCUMULATOR * V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetSegment0Voltage(void)
+{
+    return (float)App_SumOfArrayElements(
+               &cell_voltages[0][0], NUM_OF_CELLS_READ_PER_CHIP) *
+           V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetSegment1Voltage(void)
+{
+    return (float)App_SumOfArrayElements(
+               &cell_voltages[1][0], NUM_OF_CELLS_READ_PER_CHIP) *
+           V_PER_100UV;
+}
+
+float Io_AccumulatorVoltages_GetSegment2Voltage(void)
+{
+    return 0.0f;
+}
+
+float Io_AccumulatorVoltages_GetSegment3Voltage(void)
+{
+    return 0.0f;
+}
+
+float Io_AccumulatorVoltages_GetSegment4Voltage(void)
+{
+    return 0.0f;
+}
+
+float Io_AccumulatorVoltages_GetSegment5Voltage(void)
+{
+    return 0.0f;
 }

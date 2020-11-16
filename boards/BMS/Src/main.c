@@ -39,10 +39,9 @@
 #include "Io_Charger.h"
 #include "Io_OkStatuses.h"
 #include "Io_LTC6813.h"
-#include "Io_CellVoltages.h"
+#include "Io_AccumulatorVoltages.h"
 
 #include "App_BmsWorld.h"
-#include "App_AccumulatorVoltages.h"
 #include "App_SharedStateMachine.h"
 #include "states/App_InitState.h"
 #include "configs/App_HeartbeatMonitorConfig.h"
@@ -227,19 +226,19 @@ int main(void)
         Io_OkStatuses_IsBspdOkEnabled);
 
     Io_LTC6813_Init(&hspi2, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
-    App_AccumulatorVoltages_Init(Io_CellVoltages_GetRawCellVoltages);
     cell_monitor = App_Accumulator_Create(
-        Io_LTC6813_ConfigureRegisterA, Io_CellVoltages_ReadRawCellVoltages,
-        App_AccumulatorVoltages_GetMinCellVoltage,
-        App_AccumulatorVoltages_GetMaxCellVoltage,
-        App_AccumulatorVoltages_GetAverageCellVoltage,
-        App_AccumulatorVoltages_GetPackVoltage,
-        App_AccumulatorVoltages_GetSegment0Voltage,
-        App_AccumulatorVoltages_GetSegment1Voltage,
-        App_AccumulatorVoltages_GetSegment2Voltage,
-        App_AccumulatorVoltages_GetSegment3Voltage,
-        App_AccumulatorVoltages_GetSegment4Voltage,
-        App_AccumulatorVoltages_GetSegment5Voltage, MIN_CELL_VOLTAGE,
+        Io_LTC6813_ConfigureRegisterA,
+        Io_AccumulatorVoltages_ReadRawCellVoltages,
+        Io_AccumulatorVoltages_GetMinCellVoltage,
+        Io_AccumulatorVoltages_GetMaxCellVoltage,
+        Io_AccumulatorVoltages_GetAverageCellVoltage,
+        Io_AccumulatorVoltages_GetPackVoltage,
+        Io_AccumulatorVoltages_GetSegment0Voltage,
+        Io_AccumulatorVoltages_GetSegment1Voltage,
+        Io_AccumulatorVoltages_GetSegment2Voltage,
+        Io_AccumulatorVoltages_GetSegment3Voltage,
+        Io_AccumulatorVoltages_GetSegment4Voltage,
+        Io_AccumulatorVoltages_GetSegment5Voltage, MIN_CELL_VOLTAGE,
         MAX_CELL_VOLTAGE, MIN_SEGMENT_VOLTAGE, MAX_SEGMENT_VOLTAGE,
         MIN_PACK_VOLTAGE, MAX_PACK_VOLTAGE);
 
