@@ -1,9 +1,8 @@
 #pragma once
 
-#include "App_BmsWorld.h"
+#include "App_PrechargeState.h"
 
 struct BmsWorld;
-struct PrechargeState;
 struct PrechargeStateMachine;
 
 /**
@@ -28,36 +27,6 @@ struct PrechargeState *
 void App_PrechargeStateMachine_SetNextState(
     struct BmsWorld *      world,
     struct PrechargeState *next_state);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeStateMachine_GetWaitBootState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeStateMachine_GetWaitAIRState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeStateMachine_GetPrechargeState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeStateMachine_GetPrechargeOkState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeStateMachine_GetPrechargeFailState(void);
 
 /**
  *
