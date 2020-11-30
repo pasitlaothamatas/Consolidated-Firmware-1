@@ -61,6 +61,8 @@ FAKE_VALUE_FUNC(float, get_segment_4_voltage);
 FAKE_VALUE_FUNC(float, get_segment_5_voltage);
 FAKE_VALUE_FUNC(bool, is_air_negative_on);
 FAKE_VALUE_FUNC(bool, is_air_positive_on);
+FAKE_VALUE_FUNC(float, get_ts_adc_voltage);
+FAKE_VALUE_FUNC(ExitCode, get_ts_positive_voltage, float, float *);
 
 class BmsStateMachineTest : public BaseStateMachineTest
 {
@@ -106,6 +108,9 @@ class BmsStateMachineTest : public BaseStateMachineTest
             MIN_CELL_VOLTAGE, MAX_CELL_VOLTAGE, MIN_SEGMENT_VOLTAGE,
             MAX_SEGMENT_VOLTAGE, MIN_PACK_VOLTAGE, MAX_PACK_VOLTAGE);
 
+        tractive_system = App_TractiveSystem_Create(
+            get_ts_adc_voltage, get_ts_positive_voltage);
+
         air_negative = App_SharedBinaryStatus_Create(is_air_negative_on);
         air_positive = App_SharedBinaryStatus_Create(is_air_positive_on);
 
@@ -114,7 +119,7 @@ class BmsStateMachineTest : public BaseStateMachineTest
         world = App_BmsWorld_Create(
             can_tx_interface, can_rx_interface, imd, heartbeat_monitor,
             rgb_led_sequence, charger, bms_ok, imd_ok, bspd_ok, cell_monitor,
-            air_negative, air_positive, clock);
+            tractive_system, air_negative, air_positive, clock);
 
         // Default to starting the state machine in the `init` state
         state_machine =
@@ -172,6 +177,7 @@ class BmsStateMachineTest : public BaseStateMachineTest
         TearDownObject(imd_ok, App_OkStatus_Destroy);
         TearDownObject(bspd_ok, App_OkStatus_Destroy);
         TearDownObject(cell_monitor, App_Accumulator_Destroy);
+        TearDownObject(tractive_system, App_TractiveSystem_Destroy);
         TearDownObject(air_negative, App_SharedBinaryStatus_Destroy);
         TearDownObject(air_positive, App_SharedBinaryStatus_Destroy);
         TearDownObject(clock, App_SharedClock_Destroy);
@@ -226,6 +232,7 @@ class BmsStateMachineTest : public BaseStateMachineTest
     struct OkStatus *         imd_ok;
     struct OkStatus *         bspd_ok;
     struct Accumulator *      cell_monitor;
+    struct TractiveSystem *   tractive_system;
     struct BinaryStatus *     air_negative;
     struct BinaryStatus *     air_positive;
     struct Clock *            clock;

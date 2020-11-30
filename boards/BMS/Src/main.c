@@ -41,6 +41,8 @@
 #include "Io_LTC6813.h"
 #include "Io_CellVoltages.h"
 #include "Io_Airs.h"
+#include "Io_Adc.h"
+#include "Io_VoltageSense.h"
 
 #include "App_BmsWorld.h"
 #include "App_AccumulatorVoltages.h"
@@ -111,6 +113,7 @@ struct OkStatus *         bspd_ok;
 struct Accumulator *      cell_monitor;
 struct BinaryStatus *     air_negative;
 struct BinaryStatus *     air_positive;
+struct TractiveSystem *   tractive_system;
 struct Clock *            clock;
 /* USER CODE END PV */
 
@@ -193,6 +196,12 @@ int main(void)
     MX_TIM3_Init();
     /* USER CODE BEGIN 2 */
     __HAL_DBGMCU_FREEZE_IWDG();
+
+    HAL_ADC_Start_DMA(
+        &hadc1, (uint32_t *)Io_Adc_GetRawAdc1Values(),
+        hadc1.Init.NbrOfConversion);
+    HAL_TIM_Base_Start(&htim3);
+
     Io_SharedHardFaultHandler_Init();
 
     Io_Imd_Init();
@@ -246,6 +255,10 @@ int main(void)
         MAX_CELL_VOLTAGE, MIN_SEGMENT_VOLTAGE, MAX_SEGMENT_VOLTAGE,
         MIN_PACK_VOLTAGE, MAX_PACK_VOLTAGE);
 
+    tractive_system = App_TractiveSystem_Create(
+        Io_Adc_GetAdc1Channel3Voltage, Io_VoltageSense_GetTractiveSystemVoltage,
+        400.0f, 480U);
+
     air_negative = App_SharedBinaryStatus_Create(Io_Airs_IsAirNegativeOn);
     air_positive = App_SharedBinaryStatus_Create(Io_Airs_IsAirPositiveOn);
 
@@ -253,8 +266,8 @@ int main(void)
 
     world = App_BmsWorld_Create(
         can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-        bms_ok, imd_ok, bspd_ok, cell_monitor, air_negative, air_positive,
-        clock);
+        bms_ok, imd_ok, bspd_ok, cell_monitor, tractive_system, air_negative,
+        air_positive, clock);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);
@@ -893,6 +906,7 @@ void RunTask1kHz(void const *argument)
         const uint32_t current_time_ms = osKernelSysTick() * portTICK_PERIOD_MS;
 
         App_SharedClock_SetCurrentTimeInMilliseconds(clock, current_time_ms);
+        App_PrechargeStateMachine_Tick(world);
         Io_CanTx_EnqueuePeriodicMsgs(can_tx, current_time_ms);
 
         // Watchdog check-in must be the last function called before putting the
