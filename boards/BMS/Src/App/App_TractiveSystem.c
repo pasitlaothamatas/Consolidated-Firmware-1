@@ -111,12 +111,12 @@ enum TSExitCode App_TractiveSystem_CheckBusVoltage(
         else if (ts_voltage > max_ts_threshold)
         {
             // The bus voltage rose faster than expected
-            ts_exit_code = TS_BUS_VOLTAGE_OVERFLOW_ERROR;
+            ts_exit_code = TS_BUS_OVERVOLTAGE_ERROR;
         }
         else if (ts_voltage < min_ts_threshold)
         {
             // The bus voltage rose slower than expected
-            ts_exit_code = TS_BUS_VOLTAGE_UNDERFLOW_ERROR;
+            ts_exit_code = TS_BUS_UNDERVOLTAGE_ERROR;
         }
     }
 

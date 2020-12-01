@@ -1,6 +1,7 @@
 #include "states/App_AllStates.h"
 #include "states/App_InitState.h"
-#include "states/App_DriveState.h"
+#include "states/App_ChargeState.h"
+#include "states/App_FaultState.h"
 
 #include "App_SetPeriodicCanSignals.h"
 #include "App_SharedMacros.h"
@@ -32,7 +33,21 @@ static void InitStateRunOnTick100Hz(struct StateMachine *const state_machine)
 
     App_SetPeriodicCanSignals_Imd(can_tx, imd);
 
-    App_SharedStateMachine_SetNextState(state_machine, App_GetDriveState());
+    // TODO: Implement a conditional statement checking if charging is
+    // successful.
+
+    if (App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx),
+        CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_SUCCESS_CHOICE)
+    {
+        App_SharedStateMachine_SetNextState(
+            state_machine, App_GetChargeState());
+    }
+    else if (
+        App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx),
+        CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_FAIL_CHOICE)
+    {
+        App_SharedStateMachine_SetNextState(state_machine, App_GetFaultState());
+    }
 }
 
 static void InitStateRunOnExit(struct StateMachine *const state_machine)

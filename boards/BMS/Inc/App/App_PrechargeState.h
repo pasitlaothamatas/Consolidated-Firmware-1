@@ -9,13 +9,13 @@ struct PrechargeState;
  *
  * @return
  */
-struct PrechargeState *App_PrechargeState_GetWaitBootState(void);
+struct PrechargeState *App_PrechargeState_GetInitState(void);
 
 /**
  *
  * @return
  */
-struct PrechargeState *App_PrechargeState_GetWaitAIRState(void);
+struct PrechargeState *App_PrechargeState_GetAIRState(void);
 
 /**
  *
@@ -27,13 +27,7 @@ struct PrechargeState *App_PrechargeStateMachine_GetPrechargeState(void);
  *
  * @return
  */
-struct PrechargeState *App_PrechargeState_GetPrechargeOkState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeState_GetPrechargeFailState(void);
+struct PrechargeState *App_PrechargeState_GetPrechargeFaultState(void);
 
 /**
  *
