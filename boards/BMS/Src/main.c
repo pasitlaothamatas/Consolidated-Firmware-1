@@ -43,6 +43,7 @@
 #include "Io_Airs.h"
 #include "Io_Adc.h"
 #include "Io_VoltageSense.h"
+#include "Io_Precharge.h"
 
 #include "App_BmsWorld.h"
 #include "App_AccumulatorVoltages.h"
@@ -257,7 +258,7 @@ int main(void)
 
     tractive_system = App_TractiveSystem_Create(
         Io_Adc_GetAdc1Channel3Voltage, Io_VoltageSense_GetTractiveSystemVoltage,
-        400.0f, 480U);
+        Io_Precharge_Enable, Io_Precharge_Disable, 400.0f, 480U);
 
     air_negative = App_SharedBinaryStatus_Create(Io_Airs_IsAirNegativeOn);
     air_positive = App_SharedBinaryStatus_Create(Io_Airs_IsAirPositiveOn);

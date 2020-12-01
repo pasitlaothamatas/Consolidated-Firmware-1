@@ -13,9 +13,21 @@ enum TSExitCode
     TS_PRECHARGE_SUCCESS,
 };
 
+/**
+ *
+ * @param get_ts_adc_voltage
+ * @param get_ts_voltage
+ * @param enable_precharge
+ * @param disable_precharge
+ * @param expected_accumulator_voltage
+ * @param precharge_rc_ms
+ * @return
+ */
 struct TractiveSystem *App_TractiveSystem_Create(
     float (*get_ts_adc_voltage)(void),
     ExitCode (*get_ts_voltage)(float, float *),
+    void (*enable_precharge)(void),
+    void (*disable_precharge)(void),
     float    expected_accumulator_voltage,
     uint32_t precharge_rc_ms);
 
@@ -26,15 +38,23 @@ struct TractiveSystem *App_TractiveSystem_Create(
 void App_TractiveSystem_Destroy(struct TractiveSystem *ts);
 
 /**
- * Get the voltage for the given tractive system
- * @param ts The given tractive system
- * @param ts_voltage
- * @return EXIT_CODE_OK
+ *
+ * @param ts
+ * @param current_time_ms
+ * @return
  */
-ExitCode App_TractiveSystem_GetTsVoltage(
-    const struct TractiveSystem *ts,
-    float *                      ts_voltage);
-
 enum TSExitCode App_TractiveSystem_CheckBusVoltage(
     struct TractiveSystem *ts,
     uint32_t               current_time_ms);
+
+/**
+ *
+ * @param ts
+ */
+void App_TractiveSystem_EnablePrecharge(const struct TractiveSystem *ts);
+
+/**
+ *
+ * @param ts
+ */
+void App_TractiveSystem_DisablePrecharge(const struct TractiveSystem *ts);

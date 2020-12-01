@@ -21,7 +21,7 @@ struct PrechargeStateMachine *App_PrechargeStateMachine_Create(void)
 }
 
 void App_PrechargeStateMachine_SetNextState(
-    struct BmsWorld *      world,
+    struct BmsWorld *const world,
     struct PrechargeState *next_state)
 {
     struct PrechargeStateMachine *state_machine =
@@ -37,7 +37,7 @@ struct PrechargeState *
     return pre_charge_state_machine->current_state;
 }
 
-void App_PrechargeStateMachine_Tick(struct BmsWorld *world)
+void App_PrechargeStateMachine_Tick(struct BmsWorld *const world)
 {
     struct PrechargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);

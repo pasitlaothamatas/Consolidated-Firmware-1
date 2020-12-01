@@ -8,6 +8,8 @@ struct TractiveSystem
 {
     float (*get_ts_adc_voltage)(void);
     ExitCode (*get_ts_voltage)(float, float *);
+    void (*enable_precharge)(void);
+    void (*disable_precharge)(void);
 
     // The expected accumulator voltage
     float expected_accumulator_voltage;
@@ -24,14 +26,19 @@ struct TractiveSystem
 struct TractiveSystem *App_TractiveSystem_Create(
     float (*get_ts_adc_voltage)(void),
     ExitCode (*get_ts_voltage)(float, float *),
+    void (*enable_precharge)(void),
+    void (*disable_precharge)(void),
     float    expected_accumulator_voltage,
     uint32_t precharge_rc_ms)
 {
     struct TractiveSystem *ts = malloc(sizeof(struct TractiveSystem));
     assert(ts != NULL);
 
-    ts->get_ts_adc_voltage           = get_ts_adc_voltage;
-    ts->get_ts_voltage               = get_ts_voltage;
+    ts->get_ts_adc_voltage = get_ts_adc_voltage;
+    ts->get_ts_voltage     = get_ts_voltage;
+    ts->enable_precharge   = enable_precharge;
+    ts->disable_precharge  = disable_precharge;
+
     ts->expected_accumulator_voltage = expected_accumulator_voltage;
     ts->precharge_rc_ms              = precharge_rc_ms;
     ts->precharge_curr_time_ms       = 0U;
@@ -46,16 +53,9 @@ void App_TractiveSystem_Destroy(struct TractiveSystem *ts)
     free(ts);
 }
 
-ExitCode App_TractiveSystem_GetTsVoltage(
-    const struct TractiveSystem *const ts,
-    float *                            ts_voltage)
-{
-    return ts->get_ts_voltage(ts->get_ts_adc_voltage(), ts_voltage);
-}
-
 enum TSExitCode App_TractiveSystem_CheckBusVoltage(
-    struct TractiveSystem *ts,
-    uint32_t               current_time_ms)
+    struct TractiveSystem *const ts,
+    uint32_t                     current_time_ms)
 {
     // The lower bound for the voltage expected at RC, 2RC, ... , 5RC expressed
     // as a percentage of the expected voltage
@@ -96,7 +96,7 @@ enum TSExitCode App_TractiveSystem_CheckBusVoltage(
             max_cap_voltage_pct[++ts->precharge_rc_index];
 
         float ts_voltage;
-        App_TractiveSystem_GetTsVoltage(ts, &ts_voltage);
+        ts->get_ts_voltage(ts->get_ts_adc_voltage(), &ts_voltage);
 
         if (ts_voltage > min_ts_threshold && ts_voltage < max_ts_threshold)
         {
@@ -121,4 +121,14 @@ enum TSExitCode App_TractiveSystem_CheckBusVoltage(
     }
 
     return ts_exit_code;
+}
+
+void App_TractiveSystem_EnablePrecharge(const struct TractiveSystem *const ts)
+{
+    ts->enable_precharge();
+}
+
+void App_TractiveSystem_DisablePrecharge(const struct TractiveSystem *const ts)
+{
+    ts->disable_precharge();
 }
