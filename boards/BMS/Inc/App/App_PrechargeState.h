@@ -21,13 +21,7 @@ struct PrechargeState *App_PrechargeState_GetAIRState(void);
  *
  * @return
  */
-struct PrechargeState *App_PrechargeStateMachine_GetPrechargeState(void);
-
-/**
- *
- * @return
- */
-struct PrechargeState *App_PrechargeState_GetPrechargeFaultState(void);
+struct PrechargeState *App_PrechargeState_GetPrechargingState(void);
 
 /**
  *

@@ -14,26 +14,22 @@ struct PrechargeStateMachine *App_PrechargeStateMachine_Create(void)
         malloc(sizeof(struct PrechargeStateMachine));
     assert(state_machine != NULL);
 
-    state_machine->current_state = App_PrechargeState_GetInitState();
-    state_machine->next_state    = state_machine->current_state;
+    state_machine->current_state = NULL;
+    state_machine->next_state    = NULL;
 
     return state_machine;
 }
 
 void App_PrechargeStateMachine_SetNextState(
-    struct BmsWorld *const world,
-    struct PrechargeState *next_state)
+    struct PrechargeStateMachine *state_machine,
+    struct PrechargeState *       next_state)
 {
-    struct PrechargeStateMachine *state_machine =
-        App_BmsWorld_GetPrechargeStateMachine(world);
     state_machine->next_state = next_state;
 }
 
-struct PrechargeState *
-    App_PrechargeStateMachine_GetCurrentState(struct BmsWorld *const world)
+struct PrechargeState *App_PrechargeStateMachine_GetCurrentState(
+    struct PrechargeStateMachine *const state_machine)
 {
-    struct PrechargeStateMachine *state_machine =
-        App_BmsWorld_GetPrechargeStateMachine(world);
     return state_machine->current_state;
 }
 
@@ -41,6 +37,12 @@ void App_PrechargeStateMachine_Tick(struct BmsWorld *const world)
 {
     struct PrechargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);
+
+    if (state_machine->current_state == NULL &&
+        state_machine->next_state == NULL)
+    {
+        return;
+    }
 
     if (state_machine->current_state != state_machine->next_state)
     {

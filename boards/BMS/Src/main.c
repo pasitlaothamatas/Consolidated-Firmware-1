@@ -266,9 +266,12 @@ int main(void)
     clock = App_SharedClock_Create();
 
     world = App_BmsWorld_Create(
-        can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-        bms_ok, imd_ok, bspd_ok, cell_monitor, tractive_system, air_negative,
-        air_positive, clock);
+            can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
+            bms_ok, imd_ok, bspd_ok, cell_monitor, tractive_system, air_negative,
+            air_positive, clock,
+
+            App_PrechargeSignals_IsWaitingAfterBoot,
+            App_PrechargeSignals_WaitingAfterBootCompleteCallback);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);

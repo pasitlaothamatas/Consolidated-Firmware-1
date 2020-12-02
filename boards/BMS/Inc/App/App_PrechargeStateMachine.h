@@ -16,8 +16,8 @@ struct PrechargeStateMachine *App_PrechargeStateMachine_Create(void);
  * @param world
  * @return
  */
-struct PrechargeState *
-    App_PrechargeStateMachine_GetCurrentState(struct BmsWorld *const world);
+struct PrechargeState *App_PrechargeStateMachine_GetCurrentState(
+    struct PrechargeStateMachine *const state_machine);
 
 /**
  *
@@ -25,8 +25,8 @@ struct PrechargeState *
  * @param next_state
  */
 void App_PrechargeStateMachine_SetNextState(
-    struct BmsWorld *      world,
-    struct PrechargeState *next_state);
+    struct PrechargeStateMachine *state_machine,
+    struct PrechargeState *       next_state);
 
 /**
  *

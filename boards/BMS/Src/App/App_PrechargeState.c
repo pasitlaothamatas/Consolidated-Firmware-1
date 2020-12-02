@@ -17,8 +17,10 @@ static void App_PrechargeState_RunOnTickInitState(struct BmsWorld *const world)
 
 static void App_PrechargeState_RunOnTickAIRState(struct BmsWorld *const world)
 {
-    struct BmsCanTxInterface *can_tx       = App_BmsWorld_GetCanTx(world);
-    struct BinaryStatus *     air_negative = App_BmsWorld_GetAirNegative(world);
+    struct BmsCanTxInterface *    can_tx = App_BmsWorld_GetCanTx(world);
+    struct PrechargeStateMachine *state_machine =
+        App_BmsWorld_GetPrechargeStateMachine(world);
+    struct BinaryStatus *air_negative = App_BmsWorld_GetAirNegative(world);
 
     App_CanTx_SetPeriodicSignal_PRECHARGE_STATE(
         can_tx, CANMSGS_BMS_PRECHARGE_STATES_PRECHARGE_STATE_AIR_CHOICE);
@@ -26,7 +28,7 @@ static void App_PrechargeState_RunOnTickAIRState(struct BmsWorld *const world)
     if (App_SharedBinaryStatus_IsActive(air_negative))
     {
         App_PrechargeStateMachine_SetNextState(
-            world, App_PrechargeStateMachine_GetPrechargeState());
+            state_machine, App_PrechargeState_GetPrechargingState());
     }
 }
 
@@ -45,11 +47,12 @@ static void
     if (App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx) ==
         CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_PRECHARGING_CHOICE)
     {
-        enum TSExitCode exit_code = App_TractiveSystem_CheckBusVoltage(
-            tractive_system,
+        enum TSExitCode ts_exit_code;
+        App_TractiveSystem_CheckPrechargeBusVoltage(
+            tractive_system, &ts_exit_code,
             App_SharedClock_GetCurrentTimeInMilliseconds(clock));
 
-        if (exit_code != TS_BUS_VOLTAGE_IN_RANGE)
+        if (ts_exit_code != TS_BUS_VOLTAGE_IN_RANGE)
         {
             App_TractiveSystem_DisablePrecharge(tractive_system);
         }
@@ -58,15 +61,15 @@ static void
             App_TractiveSystem_EnablePrecharge(tractive_system);
         }
 
-        if (exit_code == TS_PRECHARGE_SUCCESS)
+        if (ts_exit_code == TS_PRECHARGE_SUCCESS)
         {
             App_CanTx_SetPeriodicSignal_PRECHARGING_CONDITION(
                 can_tx,
                 CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_SUCCESS_CHOICE);
         }
         else if (
-            exit_code == TS_BUS_OVERVOLTAGE_ERROR ||
-            exit_code == TS_BUS_UNDERVOLTAGE_ERROR)
+            ts_exit_code == TS_BUS_OVERVOLTAGE_ERROR ||
+            ts_exit_code == TS_BUS_UNDERVOLTAGE_ERROR)
         {
             App_CanTx_SetPeriodicSignal_PRECHARGING_CONDITION(
                 can_tx,

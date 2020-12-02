@@ -12,6 +12,8 @@
 #include "App_SharedBinaryStatus.h"
 #include "App_SharedClock.h"
 #include "App_PrechargeStateMachine.h"
+#include "App_SharedWaitSignal.h"
+#include "App_PrechargeSignals.h"
 
 struct BmsWorld;
 
@@ -38,7 +40,10 @@ struct BmsWorld *App_BmsWorld_Create(
     struct TractiveSystem *   tractive_system,
     struct BinaryStatus *     air_negative,
     struct BinaryStatus *     air_positive,
-    struct Clock *            clock);
+    struct Clock *            clock,
+
+    bool (*is_in_init_state)(struct BmsWorld *world),
+    void (*wait_after_boot_complete_callback)(struct BmsWorld *world));
 
 /**
  * Deallocate the memory used by the given world
