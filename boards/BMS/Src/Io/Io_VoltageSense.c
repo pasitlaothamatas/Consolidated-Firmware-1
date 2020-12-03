@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include "Io_Adc.h"
 #include "Io_VoltageSense.h"
 
 ExitCode Io_VoltageSense_GetTractiveSystemVoltage(

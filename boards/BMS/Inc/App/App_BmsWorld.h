@@ -8,8 +8,13 @@
 #include "App_Charger.h"
 #include "App_OkStatus.h"
 #include "App_Accumulator.h"
+#include "App_TractiveSystem.h"
 #include "App_SharedBinaryStatus.h"
 #include "App_SharedClock.h"
+#include "App_PrechargeStateMachine.h"
+#include "App_PrechargeSignals.h"
+#include "App_SharedWaitSignal.h"
+#include "configs/App_WaitSignalDuration.h"
 
 struct BmsWorld;
 
@@ -33,9 +38,13 @@ struct BmsWorld *App_BmsWorld_Create(
     struct OkStatus *         imd_ok,
     struct OkStatus *         bspd_ok,
     struct Accumulator *      accumulator,
+    struct TractiveSystem *   tractive_system,
     struct BinaryStatus *     air_negative,
     struct BinaryStatus *     air_positive,
-    struct Clock *            clock);
+    struct Clock *            clock,
+
+    bool (*is_in_init_state)(struct BmsWorld *world),
+    void (*wait_after_init_callback)(struct BmsWorld *world));
 
 /**
  * Deallocate the memory used by the given world
@@ -113,8 +122,15 @@ struct OkStatus *App_BmsWorld_GetBspdOkStatus(const struct BmsWorld *world);
  * @param world The world to get the accumulator for
  * @return The accumulator for the given world
  */
-struct Accumulator *
-    App_BmsWorld_GetAccumulator(const struct BmsWorld *const world);
+struct Accumulator *App_BmsWorld_GetAccumulator(const struct BmsWorld *world);
+
+/**
+ * Get the tractive system for the given world
+ * @param world The world to get the tractive system for
+ * @return The tractive system for the given world
+ */
+struct TractiveSystem *
+    App_BmsWorld_GetTractiveSystem(const struct BmsWorld *world);
 
 /**
  * Get the air negative binary status for the given world
@@ -136,3 +152,10 @@ struct BinaryStatus *App_BmsWorld_GetAirPositive(const struct BmsWorld *world);
  * @return The clock for the given world
  */
 struct Clock *App_BmsWorld_GetClock(const struct BmsWorld *world);
+
+struct PreChargeStateMachine *
+    App_BmsWorld_GetPrechargeStateMachine(const struct BmsWorld *world);
+
+void App_BmsWorld_UpdateWaitSignal(
+    const struct BmsWorld *world,
+    uint32_t               current_ms);
