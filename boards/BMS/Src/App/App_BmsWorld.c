@@ -19,8 +19,8 @@ struct BmsWorld
     struct BinaryStatus *         air_negative;
     struct BinaryStatus *         air_positive;
     struct Clock *                clock;
-    struct PrechargeStateMachine *precharge_state_machine;
-    struct WaitSignal *           wait_after_boot_signal;
+    struct PreChargeStateMachine *pre_charge_state_machine;
+    struct WaitSignal *           wait_after_init_signal;
 };
 
 struct BmsWorld *App_BmsWorld_Create(
@@ -40,7 +40,7 @@ struct BmsWorld *App_BmsWorld_Create(
     struct Clock *const             clock,
 
     bool (*is_in_init_state)(struct BmsWorld *),
-    void (*wait_after_boot_complete_callback)(struct BmsWorld *))
+    void (*wait_after_init_callback)(struct BmsWorld *))
 {
     struct BmsWorld *world = (struct BmsWorld *)malloc(sizeof(struct BmsWorld));
     assert(world != NULL);
@@ -60,21 +60,22 @@ struct BmsWorld *App_BmsWorld_Create(
     world->air_positive      = air_positive;
     world->clock             = clock;
 
-    world->precharge_state_machine = App_PrechargeStateMachine_Create();
+    world->pre_charge_state_machine = App_PreChargeStateMachine_Create();
 
-    struct WaitSignalCallback boot_callback = {
-        .function = wait_after_boot_complete_callback, .wait_duration_ms = 5000U
+    struct WaitSignalCallback _wait_after_init_callback = {
+        .function         = wait_after_init_callback,
+        .wait_duration_ms = WAIT_DURATION_AFTER_INIT_STATE_MS
     };
-    world->wait_after_boot_signal =
-        App_SharedWaitSignal_Create(0U, is_in_init_state, world, boot_callback);
+    world->wait_after_init_signal = App_SharedWaitSignal_Create(
+        0U, is_in_init_state, world, _wait_after_init_callback);
 
     return world;
 }
 
 void App_BmsWorld_Destroy(struct BmsWorld *world)
 {
-    free(world->wait_after_boot_signal);
-    free(world->precharge_state_machine);
+    free(world->wait_after_init_signal);
+    free(world->pre_charge_state_machine);
     free(world);
 }
 
@@ -157,8 +158,15 @@ struct Clock *App_BmsWorld_GetClock(const struct BmsWorld *const world)
     return world->clock;
 }
 
-struct PrechargeStateMachine *
+struct PreChargeStateMachine *
     App_BmsWorld_GetPrechargeStateMachine(const struct BmsWorld *const world)
 {
-    return world->precharge_state_machine;
+    return world->pre_charge_state_machine;
+}
+
+void App_BmsWorld_UpdateWaitSignal(
+    const struct BmsWorld *const world,
+    uint32_t                     current_ms)
+{
+    App_SharedWaitSignal_Update(world->wait_after_init_signal, current_ms);
 }

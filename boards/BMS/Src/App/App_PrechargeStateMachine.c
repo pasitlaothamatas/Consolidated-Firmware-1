@@ -2,51 +2,46 @@
 #include <stdlib.h>
 #include "App_PrechargeStateMachine.h"
 
-struct PrechargeStateMachine
+struct PreChargeStateMachine
 {
-    struct PrechargeState *current_state;
-    struct PrechargeState *next_state;
+    struct PreChargeState *current_state;
+    struct PreChargeState *next_state;
 };
 
-struct PrechargeStateMachine *App_PrechargeStateMachine_Create(void)
+struct PreChargeStateMachine *App_PreChargeStateMachine_Create(void)
 {
-    struct PrechargeStateMachine *state_machine =
-        malloc(sizeof(struct PrechargeStateMachine));
+    struct PreChargeStateMachine *state_machine =
+        malloc(sizeof(struct PreChargeStateMachine));
     assert(state_machine != NULL);
 
-    state_machine->current_state = NULL;
-    state_machine->next_state    = NULL;
+    state_machine->current_state = App_PreChargeState_GetInitState();
+    state_machine->next_state    = App_PreChargeState_GetInitState();
 
     return state_machine;
 }
 
-void App_PrechargeStateMachine_SetNextState(
-    struct PrechargeStateMachine *state_machine,
-    struct PrechargeState *       next_state)
+void App_PreChargeStateMachine_SetNextState(
+    struct PreChargeStateMachine *const state_machine,
+    struct PreChargeState *const        next_state)
 {
     state_machine->next_state = next_state;
 }
 
-struct PrechargeState *App_PrechargeStateMachine_GetCurrentState(
-    struct PrechargeStateMachine *const state_machine)
+struct PreChargeState *App_PreChargeStateMachine_GetCurrentState(
+    struct PreChargeStateMachine *const state_machine)
 {
     return state_machine->current_state;
 }
 
-void App_PrechargeStateMachine_Tick(struct BmsWorld *const world)
+void App_PreChargeStateMachine_Tick(struct BmsWorld *const world)
 {
-    struct PrechargeStateMachine *state_machine =
+    struct PreChargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);
-
-    if (state_machine->current_state == NULL &&
-        state_machine->next_state == NULL)
-    {
-        return;
-    }
 
     if (state_machine->current_state != state_machine->next_state)
     {
         state_machine->current_state = state_machine->next_state;
-        App_PrechargeState_RunOnTick(state_machine->current_state, world);
     }
+
+    App_PreChargeState_RunOnTick(state_machine->current_state, world);
 }

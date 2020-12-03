@@ -52,6 +52,7 @@
 #include "configs/App_HeartbeatMonitorConfig.h"
 #include "configs/App_ImdConfig.h"
 #include "configs/App_AccumulatorThresholds.h"
+#include "configs/App_PreChargeConstants.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -258,7 +259,8 @@ int main(void)
 
     tractive_system = App_TractiveSystem_Create(
         Io_Adc_GetAdc1Channel3Voltage, Io_VoltageSense_GetTractiveSystemVoltage,
-        Io_Precharge_Enable, Io_Precharge_Disable, 400.0f, 480U);
+        Io_Precharge_Enable, Io_Precharge_Disable, MAX_PACK_VOLTAGE,
+        PRECHARGE_RC_TIME_CONSTANT_MS);
 
     air_negative = App_SharedBinaryStatus_Create(Io_Airs_IsAirNegativeOn);
     air_positive = App_SharedBinaryStatus_Create(Io_Airs_IsAirPositiveOn);
@@ -266,12 +268,12 @@ int main(void)
     clock = App_SharedClock_Create();
 
     world = App_BmsWorld_Create(
-            can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
-            bms_ok, imd_ok, bspd_ok, cell_monitor, tractive_system, air_negative,
-            air_positive, clock,
+        can_tx, can_rx, imd, heartbeat_monitor, rgb_led_sequence, charger,
+        bms_ok, imd_ok, bspd_ok, cell_monitor, tractive_system, air_negative,
+        air_positive, clock,
 
-            App_PrechargeSignals_IsWaitingAfterBoot,
-            App_PrechargeSignals_WaitingAfterBootCompleteCallback);
+        App_PrechargeSignals_IsWaitingAfterBoot,
+        App_PrechargeSignals_WaitingAfterBootCompleteCallback);
 
     Io_StackWaterMark_Init(can_tx);
     Io_SoftwareWatchdog_Init(can_tx);
@@ -910,7 +912,8 @@ void RunTask1kHz(void const *argument)
         const uint32_t current_time_ms = osKernelSysTick() * portTICK_PERIOD_MS;
 
         App_SharedClock_SetCurrentTimeInMilliseconds(clock, current_time_ms);
-        App_PrechargeStateMachine_Tick(world);
+        App_PreChargeStateMachine_Tick(world);
+        App_BmsWorld_UpdateWaitSignal(world, current_time_ms);
         Io_CanTx_EnqueuePeriodicMsgs(can_tx, current_time_ms);
 
         // Watchdog check-in must be the last function called before putting the

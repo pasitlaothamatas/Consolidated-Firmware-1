@@ -1,24 +1,17 @@
 #include "App_PrechargeState.h"
 
-#define MAX_NAME_LENGTH 16U
-
-struct PrechargeState
-{
-    char name[MAX_NAME_LENGTH];
-    void (*run_on_tick)(struct BmsWorld *);
-};
-
-static void App_PrechargeState_RunOnTickInitState(struct BmsWorld *const world)
+static void App_PreChargeState_RunOnTickInitState(struct BmsWorld *const world)
 {
     struct BmsCanTxInterface *can_tx = App_BmsWorld_GetCanTx(world);
     App_CanTx_SetPeriodicSignal_PRECHARGE_STATE(
         can_tx, CANMSGS_BMS_PRECHARGE_STATES_PRECHARGE_STATE_INIT_CHOICE);
 }
 
-static void App_PrechargeState_RunOnTickAIRState(struct BmsWorld *const world)
+static void
+    App_PreChargeState_RunOnTickWaitAirNegState(struct BmsWorld *const world)
 {
     struct BmsCanTxInterface *    can_tx = App_BmsWorld_GetCanTx(world);
-    struct PrechargeStateMachine *state_machine =
+    struct PreChargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);
     struct BinaryStatus *air_negative = App_BmsWorld_GetAirNegative(world);
 
@@ -27,13 +20,13 @@ static void App_PrechargeState_RunOnTickAIRState(struct BmsWorld *const world)
 
     if (App_SharedBinaryStatus_IsActive(air_negative))
     {
-        App_PrechargeStateMachine_SetNextState(
-            state_machine, App_PrechargeState_GetPrechargingState());
+        App_PreChargeStateMachine_SetNextState(
+            state_machine, App_PreChargeState_GetPrechargingState());
     }
 }
 
 static void
-    App_PrechargeState_RunOnTickPrechargingState(struct BmsWorld *const world)
+    App_PreChargeState_RunOnTickPrechargingState(struct BmsWorld *const world)
 {
     struct BmsCanTxInterface *can_tx = App_BmsWorld_GetCanTx(world);
     struct TractiveSystem *   tractive_system =
@@ -78,37 +71,38 @@ static void
     }
 }
 
-struct PrechargeState *App_PrechargeState_GetInitState(void)
+struct PreChargeState *App_PreChargeState_GetInitState(void)
 {
-    static struct PrechargeState state = {
-        .name = "INIT", .run_on_tick = App_PrechargeState_RunOnTickInitState
+    static struct PreChargeState state = {
+        .name = "INIT", .run_on_tick = App_PreChargeState_RunOnTickInitState
     };
 
     return &state;
 }
 
-struct PrechargeState *App_PrechargeState_GetAIRState(void)
+struct PreChargeState *App_PreChargeState_GetAIRState(void)
 {
-    static struct PrechargeState state = {
-        .name = "AIR", .run_on_tick = App_PrechargeState_RunOnTickAIRState
+    static struct PreChargeState state = {
+        .name        = "WAIT_AIR_NEG",
+        .run_on_tick = App_PreChargeState_RunOnTickWaitAirNegState
     };
 
     return &state;
 }
 
-struct PrechargeState *App_PrechargeState_GetPrechargingState(void)
+struct PreChargeState *App_PreChargeState_GetPrechargingState(void)
 {
-    static struct PrechargeState state = {
-        .name        = "PRECHARGING",
-        .run_on_tick = App_PrechargeState_RunOnTickPrechargingState
+    static struct PreChargeState state = {
+        .name        = "PRE_CHARGING",
+        .run_on_tick = App_PreChargeState_RunOnTickPrechargingState
     };
 
     return &state;
 }
 
-void App_PrechargeState_RunOnTick(
-    struct PrechargeState *state,
-    struct BmsWorld *const world)
+void App_PreChargeState_RunOnTick(
+    struct PreChargeState *state,
+    struct BmsWorld *      world)
 {
     state->run_on_tick(world);
 }

@@ -35,15 +35,14 @@ static void InitStateRunOnTick100Hz(struct StateMachine *const state_machine)
 
     // TODO: Implement a conditional statement checking if charging is
     // successful.
-
-    if (App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx),
+    if (App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx) ==
         CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_SUCCESS_CHOICE)
     {
         App_SharedStateMachine_SetNextState(
             state_machine, App_GetChargeState());
     }
     else if (
-        App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx),
+        App_CanTx_GetPeriodicSignal_PRECHARGING_CONDITION(can_tx) ==
         CANMSGS_BMS_AIR_SHUTDOWN_ERRORS_PRECHARGING_CONDITION_FAIL_CHOICE)
     {
         App_SharedStateMachine_SetNextState(state_machine, App_GetFaultState());

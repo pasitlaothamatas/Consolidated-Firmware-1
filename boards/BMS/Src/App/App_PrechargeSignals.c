@@ -3,17 +3,19 @@
 
 bool App_PrechargeSignals_IsWaitingAfterBoot(struct BmsWorld *world)
 {
-    struct PrechargeStateMachine *state_machine =
+    struct PreChargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);
-    return App_PrechargeStateMachine_GetCurrentState(state_machine) ==
-           App_PrechargeState_GetInitState();
+
+    return App_PreChargeStateMachine_GetCurrentState(state_machine) ==
+           App_PreChargeState_GetInitState();
 }
 
-void App_PrechargeSignals_WaitingAfterBootCompleteCallback(struct BmsWorld *world)
+void App_PrechargeSignals_WaitingAfterBootCompleteCallback(
+    struct BmsWorld *world)
 {
-    struct PrechargeStateMachine *state_machine =
+    struct PreChargeStateMachine *state_machine =
         App_BmsWorld_GetPrechargeStateMachine(world);
 
-    App_PrechargeStateMachine_SetNextState(
-        state_machine, App_PrechargeState_GetAIRState());
+    App_PreChargeStateMachine_SetNextState(
+        state_machine, App_PreChargeState_GetAIRState());
 }
