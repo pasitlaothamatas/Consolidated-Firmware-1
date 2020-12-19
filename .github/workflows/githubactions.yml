@@ -18,4 +18,7 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: Send greeting
-      run: echo "Hello ${{ github.event.inputs.name }}"
+      run: echo Sending Greeting Test "FIRST_NAME $SECOND_NAME
+      env:
+              FIRST_NAME: HEY
+              SECOND_NAME : HEYY
