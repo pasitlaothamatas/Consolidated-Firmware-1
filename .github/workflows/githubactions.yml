@@ -18,7 +18,7 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: Send greeting
-      run: echo Sending Greeting Test "FIRST_NAME $SECOND_NAME
+      run: echo Sending Greeting Test $FIRST_NAME $SECOND_NAME
       env:
               FIRST_NAME: HEY
               SECOND_NAME : HEYY
