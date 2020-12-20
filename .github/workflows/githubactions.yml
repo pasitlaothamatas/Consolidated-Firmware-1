@@ -11,14 +11,18 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
-    # The type of runner that the job will run on
+          
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    strategy:
+        matrix:
+                python-version: [2.7]
+    
     steps:
-    # Runs a single command using the runners shell
-    - name: Send greeting
-      run: echo Sending Greeting Test $FIRST_NAME $SECOND_NAME
-      env:
-              FIRST_NAME: HEY
-              SECOND_NAME : HEYY
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with: 
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies
+      run: |
+          python -m pip install --upgrade pip 
