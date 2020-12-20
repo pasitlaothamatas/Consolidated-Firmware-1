@@ -6,7 +6,7 @@ on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Check Formatting:          
+  Check-Formatting:          
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
