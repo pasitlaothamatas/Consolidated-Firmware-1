@@ -6,7 +6,7 @@ on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  formatting_check:          
+  Check Formatting:          
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,3 +17,7 @@ jobs:
       - name: Install dependencies with pipenv
         run: | 
           pip install pipenv
+        env: 
+                INSTALL_DIR: /usr/local
+                CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                PYTHON_PATH: $PWD
