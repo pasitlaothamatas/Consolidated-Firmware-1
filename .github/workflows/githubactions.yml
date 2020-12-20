@@ -25,11 +25,11 @@ jobs:
           INSTALL_DIR: /usr/local
           CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
           PYTHON_PATH: $PWD
-          PATH: $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
+          PATH: $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && sh ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
 
       - name: Run any random script
         run: |
-                ./scripts/travis_ci/print_bin_versions.sh
-                ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
-                ./scripts/travis_ci/travis_script.sh
+                sh ./scripts/travis_ci/print_bin_versions.sh
+                sh ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
+                sh ./scripts/travis_ci/travis_script.sh
           
