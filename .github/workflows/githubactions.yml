@@ -18,7 +18,9 @@ jobs:
           python-version: 3.7
       - name: Install dependencies with pipenv
         run: | 
+          ./scripts/travis_ci/pull_git_submodules.sh
           pip install pipenv
+          git lfs pull
         env: 
                 INSTALL_DIR: /usr/local
                 CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
