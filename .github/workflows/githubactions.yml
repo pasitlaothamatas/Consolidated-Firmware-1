@@ -19,7 +19,6 @@ jobs:
       - name: Install dependencies with pipenv
         run: | 
           pip install pipenv
-          git lfs pull
           pipenv install          
         env: 
           INSTALL_DIR: /usr/local
@@ -29,7 +28,7 @@ jobs:
 
       - name: Run any random script
         run: |
-                sh ./scripts/travis_ci/print_bin_versions.sh
-                sh ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
-                sh ./scripts/travis_ci/travis_script.sh
+          ./scripts/travis_ci/print_bin_versions.sh
+          ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
+          ./scripts/travis_ci/travis_script.sh
           
