@@ -22,7 +22,6 @@ jobs:
           pipenv install          
         env: 
           INSTALL_DIR: /usr/local
-          CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
           PYTHON_PATH: $PWD
 
       - name: Run any random script
@@ -32,5 +31,6 @@ jobs:
           ./scripts/travis_ci/travis_script.sh
         env:           
           PATH: $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && sh ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
+          CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
 
           
