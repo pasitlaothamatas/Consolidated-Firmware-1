@@ -23,3 +23,6 @@ jobs:
                 INSTALL_DIR: /usr/local
                 CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
                 PYTHON_PATH: $PWD
+      - name: Run formatting script
+        run: ./.github/scripts/build.sh
+          
