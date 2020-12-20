@@ -2,28 +2,22 @@
 
 name: UBC Formula Electric CI
         
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
           
     runs-on: ubuntu-latest
-    strategy:
-        matrix:
-          python-version: [3.6]
     
     steps:
     - uses: actions/checkout@v2
+              
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v1
       with: 
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.7
     - name: Install Dependencies
       run: |
-          python pipenv install
+          pip install pipenv
           PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
