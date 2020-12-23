@@ -32,3 +32,6 @@ jobs:
                         - name: Before-Script
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
+                        - name: Script
+                          run: |
+                                  ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx 
