@@ -4,14 +4,14 @@ name: UBC Formula Electric CI
 on: [push, pull_request]
 
 jobs:
-        test_job:
+        firmware-test:
                 name: "Firmware-Test"
                 runs-on: ubuntu-latest
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
                         PYTHONPATH: $PWD
-                
+        
                 steps:
                         - uses: actions/checkout@v2
                         - name: Install-Python-Packages
@@ -44,4 +44,5 @@ jobs:
                                   
                         - name: Script
                           run: |
-                                  ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx 
+                                  ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
+                        
