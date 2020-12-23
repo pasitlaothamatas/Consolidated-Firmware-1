@@ -7,6 +7,10 @@ jobs:
         test_job:
                 name: "Test 0"
                 runs-on: ubuntu-latest
+                env: 
+                        INSTALL_DIR: /usr/local
+                        CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                        PYTHONPATH: $PWD
                 
                 steps:
                         - uses: actions/checkout@v2
