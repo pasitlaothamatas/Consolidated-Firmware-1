@@ -60,5 +60,5 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                                   
                         - name: ${{ matrix.Name }}
-                          run: echo slatt
+                          run: ${{ matrix.env }}
                                           
