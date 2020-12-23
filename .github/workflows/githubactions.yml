@@ -13,11 +13,12 @@ jobs:
                         - name: Install python packages
                           uses: actions/setup-python@v2
                           with:
-                                  python-version: 3.7
-                        - name: Before python package installation
+                                  python-version: 3.6
+                        - name: Before Install
                           run: |
+                                  ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
-                        - name: Install python packages
+                        - name: Install
                           run: |
                                   pipenv install
