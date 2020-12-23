@@ -14,6 +14,8 @@ jobs:
         
                 steps:
                         - uses: actions/checkout@v2
+                          with:
+                                  submodules: false
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
@@ -45,4 +47,4 @@ jobs:
                         - name: Script
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
-                        
+                                          
