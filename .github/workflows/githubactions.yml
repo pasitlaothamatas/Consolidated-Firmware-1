@@ -14,11 +14,11 @@ jobs:
                 
                 steps:
                         - uses: actions/checkout@v2
-                        - name: Install python packages
+                        - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
                                   python-version: 3.6
-                        - name: Before Install
+                        - name: Before-Install
                           id: bigchungusappreciator
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
@@ -29,5 +29,6 @@ jobs:
                                   pipenv install
                                   PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
                                   
-                        - name: Before Script
-                          run: echo slattt
+                        - name: Before-Script
+                          run: |
+                                  ./scripts/travis_ci/print_bin_versions.sh
