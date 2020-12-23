@@ -4,13 +4,13 @@ name: UBC Formula Electric CI
 on: [push, pull_request]
 
 jobs:
-        test_job::
+        test_job:
                 name: "Test 0"
                 runs-on: ubuntu-latest
                 
                 steps:
                         - uses: actions/checkout@v2
-                        - name: Isntall python packages
+                        - name: Install python packages
                           uses: actions/setup-python@v2
                           with:
                                   python-version: 3.7
