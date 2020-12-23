@@ -19,6 +19,7 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before Install
+                          id: dee doo dee doo
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
@@ -27,3 +28,6 @@ jobs:
                           run: |
                                   pipenv install
                                   PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
+                                  
+                        - name: Before Script
+                          run: echo slattt
