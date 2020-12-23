@@ -54,7 +54,7 @@ jobs:
                                                   
                         - name: Before-Script
                           run: |
-                                  ./scripts/travis_ci/print_bin_versions.sh
+                                  ./../scripts/travis_ci/print_bin_versions.sh
                                   
                         - name: Script
                           run: |
