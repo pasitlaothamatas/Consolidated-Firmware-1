@@ -26,3 +26,4 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
+                                  PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
