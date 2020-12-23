@@ -60,5 +60,6 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                                   
                         - name: ${{ matrix.Name }}
-                          run: ${{ matrix.env }}
+                          run: | 
+                                ${{ matrix.env }}
                                           
