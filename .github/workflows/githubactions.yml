@@ -19,19 +19,27 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          id: bigchungusappreciator
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
+                                  
                         - name: Install
                           run: |
                                   pipenv install
                                   PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
-                                  
+                          
+                        - name: Install-Addons
+                          run: |
+                                  sudo apt-get install libbz2-1.0:i386
+                                  sudo apt-get install libncurses5:i386
+                                  sudo apt-get install libz1:i386
+                                  sudo apt-get install valgrind
+                          
                         - name: Before-Script
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
+                                  
                         - name: Script
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx 
