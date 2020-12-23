@@ -45,4 +45,9 @@ jobs:
                         - name: Script
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
+                strategy:
+                        matrix:
+                                include:
+                                        - os: Build-ARM-Executables
+                                          RUN_ARM_BUILD: "true"
                         
