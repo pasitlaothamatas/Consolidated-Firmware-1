@@ -58,4 +58,7 @@ jobs:
                         - name: Script
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
+                                  
+                        - name: ${{ matrix.Name }}
+                          run: echo slatt
                                           
