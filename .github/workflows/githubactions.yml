@@ -58,6 +58,5 @@ jobs:
                                   
                         - name: Script
                           run: |
-                                  ./slatt/slatt/a
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                                                                     
