@@ -1,7 +1,7 @@
 # This is a basic workflow that is manually triggered
 
 name: UBC Formula Electric CI
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
         Firmware_Tests:
