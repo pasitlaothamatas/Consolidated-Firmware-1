@@ -31,6 +31,8 @@ jobs:
                           
                         - name: Install-Addons
                           run: |
+                                  sudo dpkg --add-architecture i386
+                                  sudo apt-get update
                                   sudo apt-get install libbz2-1.0
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libz1
