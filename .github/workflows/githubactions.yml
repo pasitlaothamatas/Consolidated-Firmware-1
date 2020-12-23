@@ -58,5 +58,6 @@ jobs:
                                   
                         - name: Script
                           run: |
+                                  echo ls
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                                                                     
