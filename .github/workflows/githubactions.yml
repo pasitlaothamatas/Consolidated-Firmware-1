@@ -4,8 +4,8 @@ name: UBC Formula Electric CI
 on: [push, pull_request]
 
 jobs:
-        firmware-test:
-                name: "Firmware-Test"
+        Test-SetUp:
+                name: "Test-SetUp"
                 runs-on: ubuntu-latest
                 env: 
                         INSTALL_DIR: /usr/local
@@ -45,6 +45,10 @@ jobs:
                         - name: Script
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
+                
+        Firmware-Test:
+                name: "Firmware-Test"
+                runs-on: ${{ matrix.os }}
                 strategy:
                         matrix:
                                 include:
