@@ -1,34 +1,23 @@
 # This is a basic workflow that is manually triggered
 
 name: UBC Formula Electric CI
-        
 on: [push, pull_request]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Check-Formatting:          
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with: 
-          submodules: false
-      - name: Setup Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.7
-      - name: Install dependencies with pipenv
-        run: | 
-          pip install pipenv
-          pipenv install          
-        env: 
-          INSTALL_DIR: /usr/local
-          PYTHON_PATH: $PWD
-
-      - name: Run any random script
-        run: |
-          ./scripts/travis_ci/travis_script.sh
-        env:           
-          PATH: $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && sh ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
-          CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
-
-          
+        test_job::
+                name: "Test 0"
+                runs-on: ubuntu-latest
+                
+                steps:
+                        - uses: actions/checkout@v2
+                        - name: Isntall python packages
+                          uses: actions/setup-python@v2
+                          with:
+                                  python-version: 3.7
+                        - name: Before python package installation
+                          run: |
+                                  pip install pipenv
+                                  git lfs pull
+                        - name: Install python packages
+                          run: |
+                                  pipenv install
