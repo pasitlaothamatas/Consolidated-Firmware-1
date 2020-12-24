@@ -26,7 +26,10 @@ jobs:
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
-                         
+                        
+                        - uses: actions/checkout@v2
+                          with:
+                                 submodules: false
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
@@ -34,7 +37,7 @@ jobs:
                         - name: Before-Install
                           run: |
                                   ${{ matrix.env }}
-                                  ${GITHUB_WORKSPACE}/scripts/travis_ci/pull_git_submodules.sh
+                                  ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
                                   
