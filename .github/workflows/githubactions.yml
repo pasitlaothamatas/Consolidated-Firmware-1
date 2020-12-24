@@ -38,7 +38,7 @@ jobs:
                                   python-version: 3.6
                         - name: Before-Install
                           env:  
-                                ${{ matrix.env }} : true
+                                ${{ matrix.env }} : "true"
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
