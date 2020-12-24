@@ -11,7 +11,9 @@ jobs:
                         matrix:
                                 include:
                                 - Name: "Check Formatting"
-                                  env: RUN_X86_TESTS="true"
+                                  env: RUN_X86_TESTS
+                                - Name: "Run ARM Build"
+                                  env: RUN_ARM_BUILD
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
@@ -35,8 +37,9 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
+                          env:  
+                                ${{ matrix.env }} : true
                           run: |
-                                  ${{ matrix.env }}
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
@@ -44,7 +47,8 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
-                                  PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
+                          env: 
+                                PATH : $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
                                                   
                         - name: Before-Script
                           run: |
