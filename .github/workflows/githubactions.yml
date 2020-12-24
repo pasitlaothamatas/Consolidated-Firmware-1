@@ -47,7 +47,10 @@ jobs:
                                   pipenv install
                           env: 
                                 PATH : $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
-                                                  
+                        
+                        - name: arm-none-eabi-gcc
+                          uses: fiam/arm-none-eabi-gcc@v1.0.2
+                          
                         - name: Before-Script
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
