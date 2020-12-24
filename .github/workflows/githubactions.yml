@@ -37,8 +37,6 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          env:  
-                                ${{ matrix.env }} : "true"
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
@@ -55,7 +53,7 @@ jobs:
                                   echo $RUN_ARM_BUILD
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
-                                RUN_ARM_BUILD : "true"
+                                ${{ matrix.env }} : "true"
                                   
                         - name: Script
                           run: |
