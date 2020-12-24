@@ -52,8 +52,10 @@ jobs:
                                                   
                         - name: Before-Script
                           run: |
-                                  echo ${{ matrix.env }}
+                                  echo $RUN_ARM_BUILD
                                   ./scripts/travis_ci/print_bin_versions.sh
+                          env: 
+                                RUN_ARM_BUILD : "true"
                                   
                         - name: Script
                           run: |
