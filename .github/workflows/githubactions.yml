@@ -35,8 +35,8 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
+                          env:  ${{ matrix.env }}
                           run: |
-                                  ${{ matrix.env }}
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
