@@ -12,6 +12,8 @@ jobs:
                                 include:
                                 - Name: "Check Formatting"
                                   env: RUN_X86_TESTS
+                                - Name: "Run ARM Build"
+                                  env: RUN_ARM_BUILD
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
