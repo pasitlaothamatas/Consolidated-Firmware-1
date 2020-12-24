@@ -1,0 +1,56 @@
+# This is a basic workflow that is manually triggered
+
+name: UBC Formula Electric CI
+on: [pull_request]
+
+jobs:
+        Firmware_Tests:
+                name: ${{ matrix.Name }}                        
+                runs-on: ubuntu-latest
+                strategy:
+                        matrix:
+                                include:
+                                - Name: "Check Formatting"
+                                  env: RUN_X86_TESTS="true"
+                env: 
+                        INSTALL_DIR: /usr/local
+                        CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                        PYTHONPATH: $PWD
+        
+                steps:
+                        - name: Install-Addons
+                          run: |
+                                  sudo dpkg --add-architecture i386
+                                  sudo apt-get update
+                                  sudo apt-get install libbz2-1.0
+                                  sudo apt-get install libncurses5
+                                  sudo apt-get install libz1
+                                  sudo apt-get install valgrind
+                        
+                        - uses: actions/checkout@v2
+                          with:
+                                 submodules: false
+                        - name: Install-Python-Packages
+                          uses: actions/setup-python@v2
+                          with:
+                                  python-version: 3.6
+                        - name: Before-Install
+                          run: |
+                                  ${{ matrix.env }}
+                                  ./scripts/travis_ci/pull_git_submodules.sh
+                                  pip install pipenv
+                                  git lfs pull
+                                  
+                        - name: Install
+                          run: |
+                                  pipenv install
+                                  PATH=$INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
+                                                  
+                        - name: Before-Script
+                          run: |
+                                  ./scripts/travis_ci/print_bin_versions.sh
+                                  
+                        - name: Script
+                          run: |
+                                  ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
+                                                                    
