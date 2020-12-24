@@ -46,8 +46,6 @@ jobs:
                           run: |
                                   pipenv install
                           env: 
-                                INSTALL_DIR : {{ env.INSTALL_DIR }}
-                                CUBE_INSTALL_DIR : {{ env.INSTALL_DIR }}
                                 PATH : $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
                         
                         - name: Before-Script
