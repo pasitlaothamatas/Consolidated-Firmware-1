@@ -26,10 +26,7 @@ jobs:
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
-                          
-                        - uses: actions/checkout@v2
-                          with:
-                                  submodules: false
+                         
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
