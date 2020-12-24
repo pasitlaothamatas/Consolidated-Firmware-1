@@ -26,7 +26,6 @@ jobs:
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
-                                  sudo systemctl start xvfb
                         
                         - uses: actions/checkout@v2
                           with:
