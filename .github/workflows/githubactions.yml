@@ -11,7 +11,7 @@ jobs:
                         matrix:
                                 include:
                                 - Name: "Check Formatting"
-                                  env: RUN_X86_TESTS="true"
+                                  env: RUN_X86_TESTS
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
@@ -35,7 +35,8 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          env:  ${{ matrix.env }}
+                          env:  
+                                ${{ matrix.env }} : true
                           run: |
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
