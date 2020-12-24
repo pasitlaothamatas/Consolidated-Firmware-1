@@ -5,7 +5,6 @@
 # Import shared bash scripts
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $SCRIPT_DIR/travis_shared.sh
-echo "RUN ARM build true"
 
 if [ "$RUN_ARM_BUILD" = "true" ] || [ "$RUN_X86_TESTS" = "true" ] || [ "$RUN_CUBE_CODEGEN_CHECKS" = "true" ]; then
   # CMake
