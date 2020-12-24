@@ -34,7 +34,7 @@ jobs:
                         - name: Before-Install
                           run: |
                                   ${{ matrix.env }}
-                                  ./scripts/travis_ci/pull_git_submodules.sh
+                                  ${GITHUB_WORKSPACE}/scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
                                   
