@@ -10,8 +10,8 @@
 # explicitly propogate the error code to its parent. Using `set -e` ensures
 # that any command with non-zero command will immediately return and abort
 # Travis.
-echo "Slatt slatt slatt"
 set -e
+echo "Slatt slatt slatt"
 
 # This allows us to 'fold' commands in Travis console
 TRAVIS_FOLD_COUNTER=0
