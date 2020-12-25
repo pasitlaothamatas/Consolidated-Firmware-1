@@ -22,6 +22,7 @@ jobs:
                 steps:
                         - name: Install-Addons
                           run: |
+                                  sudo apt-get install build-essential
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get update
                                   sudo apt-get install libbz2-1.0
