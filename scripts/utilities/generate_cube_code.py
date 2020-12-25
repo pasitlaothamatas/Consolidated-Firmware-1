@@ -6,7 +6,6 @@ import sys
 import os
 import subprocess
 import argparse
-import scripts
 
 from scripts.utilities.supported_boards import get_board_names
 
