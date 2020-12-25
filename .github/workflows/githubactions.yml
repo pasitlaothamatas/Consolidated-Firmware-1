@@ -10,7 +10,7 @@ jobs:
                 strategy:
                         matrix:
                                 include:
-                                - Name: "Check Formatting"
+                                - Name: "Build and Run x86 Tests"
                                   env: RUN_X86_TESTS
                                 #- Name: "Run ARM Build"
                                 #  env: RUN_ARM_BUILD
