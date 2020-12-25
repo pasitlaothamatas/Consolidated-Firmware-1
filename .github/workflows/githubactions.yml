@@ -23,7 +23,8 @@ jobs:
                         - name: Install-Addons
                           run: |
                                   sudo apt install gcc-arm-none-eabi
-                                  gcc --version
+                                  sudo dpkg -i libreadline6_6.3-8ubuntu2_amd64.deb
+                                  sudo dpkg -i gdb-arm-none-eabi_7.10-1ubuntu3+9_amd64.deb
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get update
                                   sudo apt-get install libbz2-1.0
