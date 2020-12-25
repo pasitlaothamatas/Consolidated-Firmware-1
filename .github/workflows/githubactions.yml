@@ -22,9 +22,7 @@ jobs:
                 steps:
                         - name: Install-Addons
                           run: |
-                                  sudo apt-get install gdb
                                   sudo apt-get install gcc-arm-none-eabi
-                                  sudo apt install gdb-arm-none-eabi
 
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get update
