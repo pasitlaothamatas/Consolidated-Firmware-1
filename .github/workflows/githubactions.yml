@@ -63,7 +63,7 @@ jobs:
                                   
                         - name: ${{ matrix.name }}
                           run: |
-                                  ./scripts/travis_ci/travis_script.sh CUBE_INSTALL_DIR/STM32CubeMx
+                                  ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                           env: 
                                 ${{ matrix.env }} : "true"
                                 PYTHONPATH: ${{ env.PYTHONPATH }}
