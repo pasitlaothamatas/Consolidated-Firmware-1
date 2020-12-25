@@ -50,13 +50,13 @@ jobs:
                           env: 
                                 PATH : $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
                         
-                        - name: Before-Script
+                        - name: Before ${{ matrix.name }}
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
                                 ${{ matrix.env }} : "true"
                                   
-                        - name: Script
+                        - name: ${{ matrix.name }}
                           run: |
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                           env: 
