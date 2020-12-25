@@ -22,6 +22,10 @@ jobs:
                 steps:
                         - name: Install-Addons
                           run: |
+                                  
+                                  sudo apt-get remove gcc-arm-none-eabi gdb-arm-none-eabi binutils-arm-none-eabi
+                                  sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
+                                  
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5
