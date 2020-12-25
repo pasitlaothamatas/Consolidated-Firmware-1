@@ -6,7 +6,7 @@ on: [pull_request]
 jobs:
         Firmware_Tests:
                 name: ${{ matrix.Name }}                        
-                runs-on: ubuntu-latest
+                runs-on: ubuntu-18.04
                 strategy:
                         matrix:
                                 include:
@@ -21,17 +21,20 @@ jobs:
         
                 steps:
                         - name: Install-Addons
-                          run: |
-                                  sudo dpkg --add-architecture i386
+                          run: |                                  
                                   sudo apt-get update
-                                  sudo apt-get install libbz2-1.0
+                                  sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5
+                                  sudo apt-get install libbz2-1.0
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
-                        
+                                  sudo apt-get install gcc-arm-none-eabi
+                                  sudo apt-get install gdb-arm-none-eabi
+
                         - uses: actions/checkout@v2
                           with:
                                  submodules: false
+                                 fetch-depth: 50
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
@@ -46,8 +49,6 @@ jobs:
                           run: |
                                   pipenv install
                           env: 
-                                INSTALL_DIR : {{ env.INSTALL_DIR }}
-                                CUBE_INSTALL_DIR : {{ env.INSTALL_DIR }}
                                 PATH : $INSTALL_DIR/bin:$CUBE_INSTALL_DIR:$PATH && ./scripts/travis_ci/travis_install_binaries.sh $INSTALL_DIR $CUBE_INSTALL_DIR
                         
                         - name: Before-Script
