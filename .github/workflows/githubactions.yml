@@ -29,7 +29,6 @@ jobs:
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
                                   sudo apt-get install gcc-arm-none-eabi
-                                  sudo apt-get install gdb-arm-none-eabi
 
                         - uses: actions/checkout@v2
                           with:
