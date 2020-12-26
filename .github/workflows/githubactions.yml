@@ -27,6 +27,15 @@ jobs:
                         - name: Install-Addons
                           run: |               
                                   sudo apt-get update
+                                  sudo apt remove gcc-arm-none-eabi
+                                  
+                                  #Install gcc-arm-none-eabi
+                                  sudo tar xjf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 -C /usr/share/
+                                  sudo ln -s /usr/share/gcc-arm-none-eabi-your-version/bin/arm-none-eabi-gcc /usr/bin/arm-none-eabi-gcc 
+                                  sudo ln -s /usr/share/gcc-arm-none-eabi-your-version/bin/arm-none-eabi-g++ /usr/bin/arm-none-eabi-g++
+                                  sudo ln -s /usr/share/gcc-arm-none-eabi-your-version/bin/arm-none-eabi-gdb /usr/bin/arm-none-eabi-gdb
+                                  sudo ln -s /usr/share/gcc-arm-none-eabi-your-version/bin/arm-none-eabi-size /usr/bin/arm-none-eabi-size
+
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libbz2-1.0
