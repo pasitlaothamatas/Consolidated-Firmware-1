@@ -28,12 +28,11 @@ jobs:
                           run: |               
                                   sudo apt-get update
                                   
-                                  sudo apt-get install gcc-arm-none-eabi     
-
-                                  sudo dpkg --add-architecture i386
-                                  sudo apt-get install libncurses5
-                                  sudo apt-get install libbz2-1.0
-                                  sudo apt-get install libz1
+                                  #sudo dpkg --add-architecture i386
+                                  
+                                  sudo apt-get install libncurses5:i386
+                                  sudo apt-get install libbz2-1.0:i386
+                                  sudo apt-get install libz1:i386
                                   sudo apt-get install valgrind
                                   sudo apt-get install gcc-arm-none-eabi
                                   sudo apt-get install gdb-arm-none-eabi
