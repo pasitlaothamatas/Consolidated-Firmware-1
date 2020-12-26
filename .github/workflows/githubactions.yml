@@ -20,7 +20,7 @@ jobs:
                                 #  env: RUN_CUBE_CODEGEN_CHECKS 
                 env: 
                         INSTALL_DIR: /usr/local
-                        CUBE_INSTALL_DIR: ${{INSTALL_DIR}}/STM32CubeMX
+                        CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                         PYTHONPATH: $PWD
         
                 steps:                               
