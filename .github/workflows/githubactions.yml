@@ -6,7 +6,7 @@ on: [pull_request]
 jobs:
         Firmware_Tests:
                 name: ${{ matrix.Name }}                        
-                runs-on: ubuntu-16.04
+                runs-on: ubuntu-18.04
                 strategy:
                         matrix:
                                 include:
@@ -59,7 +59,6 @@ jobs:
                         
                         - name: Before ${{ matrix.name }}
                           run: |
-                            echo which STM32CubeMx
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
                                 ${{ matrix.env }} : "true"
