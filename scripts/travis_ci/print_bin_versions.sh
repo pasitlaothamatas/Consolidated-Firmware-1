@@ -18,5 +18,5 @@ if [ "$RUN_ARM_BUILD" = "true" ] || [ "$RUN_X86_TESTS" = "true" ] || [ "$RUN_CUB
   travis_run arm-none-eabi-gdb --version
   # STM32CubeMX doesn't have a --version option unfortunately, we can only
   # check if it is installed correctly
-  travis_run which STM32CubeMX
+  #travis_run which STM32CubeMX
 fi
