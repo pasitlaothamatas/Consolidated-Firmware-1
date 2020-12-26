@@ -10,10 +10,10 @@ jobs:
                 strategy:
                         matrix:
                                 include:
-                                - Name: "Build and Run x86 Tests"
-                                  env: RUN_X86_TESTS
-                                - Name: "Check Formatting"
-                                  env: RUN_FORMATTING_CHECKS
+                                #- Name: "Build and Run x86 Tests"
+                                #  env: RUN_X86_TESTS
+                                #- Name: "Check Formatting"
+                                #  env: RUN_FORMATTING_CHECKS
                                 - Name: "Build ARM Executables"
                                   env: RUN_ARM_BUILD
                                 #- Name: "Check STM32CubeMX Code Generation"
