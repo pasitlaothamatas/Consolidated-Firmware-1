@@ -60,6 +60,7 @@ jobs:
                         - name: Before ${{ matrix.name }}
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
+                                  echo which STM32CubeMx
                           env: 
                                 ${{ matrix.env }} : "true"
                                   
