@@ -23,7 +23,7 @@ jobs:
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
                         PYTHONPATH: $PWD
         
-                steps:
+                steps:                               
                         - name: Install-Addons
                           run: |                                  
                                   sudo apt-get update
