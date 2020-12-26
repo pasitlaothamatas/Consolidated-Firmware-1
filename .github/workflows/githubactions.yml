@@ -59,7 +59,7 @@ jobs:
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
-                                "${matrix.env}" : "true"
+                                ${{matrix.env}} : "true"
                                   
                         - name: "${matrix.name}"
                           run: |
