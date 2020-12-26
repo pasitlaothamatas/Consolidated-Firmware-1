@@ -33,7 +33,7 @@ jobs:
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
                                   sudo apt-get install gcc-arm-none-eabi
-                                  ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
+                                  sudo ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
                                   sudo apt-get install xvfb
 
                         - uses: actions/checkout@v2
