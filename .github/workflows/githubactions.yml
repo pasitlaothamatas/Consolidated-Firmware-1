@@ -59,6 +59,9 @@ jobs:
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
+                                INSTALL_DIR: /usr/local
+                                CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                                PYTHONPATH: $PWD
                                 ${{matrix.env}} : "true"
                                   
                         - name: ${{matrix.name}}
