@@ -20,8 +20,8 @@ jobs:
                                 #  env: RUN_CUBE_CODEGEN_CHECKS 
                 env: 
                         INSTALL_DIR: /usr/local
-                        CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
-                        PYTHONPATH: $PWD
+                        CUBE_INSTALL_DIR: ${{INSTALL_DIR}}/STM32CubeMX
+                        PYTHONPATH: ${{PWD}}
         
                 steps:                               
                         - name: Install-Addons
