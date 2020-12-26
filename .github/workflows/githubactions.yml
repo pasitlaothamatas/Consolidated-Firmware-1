@@ -52,8 +52,8 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
-                          env: 
-                                PATH : ${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:${{env.PATH}} && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
+                          #env: 
+                          #      PATH : ${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:${{env.PATH}} && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                         
                         - name: Before ${{ matrix.name }}
                           run: |
@@ -66,3 +66,5 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMx
                           env: 
                                 ${{ matrix.env }} : "true"
+                                PATH : ${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:${{env.PATH}} && 
+                                        ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
