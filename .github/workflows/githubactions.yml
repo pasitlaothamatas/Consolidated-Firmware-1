@@ -55,7 +55,7 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
-                                  echo "${{ env.INSTALL_DIR }}/bin:${{ env.CUBE_INSTALL_DIR }}:${{ env.PATH }}/.local/bin && ./scripts/travis_ci/travis_install_binaries.sh ${{ env.INSTALL_DIR }} ${{ env.CUBE_INSTALL_DIR }}" >> $GITHUB_PATH
+                                  echo "${{ env.INSTALL_DIR }}/bin:${{ env.CUBE_INSTALL_DIR }}:$GITHUB_PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{ env.INSTALL_DIR }} ${{ env.CUBE_INSTALL_DIR }}" >> $GITHUB_PATH
                         
                         - name: Before ${{ matrix.name }}
                           run: |
