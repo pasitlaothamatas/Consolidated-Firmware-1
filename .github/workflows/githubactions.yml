@@ -32,9 +32,10 @@ jobs:
                                   sudo apt-get install libbz2-1.0
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
-                                  sudo apt-get install gcc-arm-none-eabi binutils-arm-none-eabi 
+                                  sudo apt-get install 
+                                  sudo gcc-arm-none-eabi binutils-arm-none-eabi 
                                   #sudo gdb-arm-none-eabi 
-                                  sudo openocd
+                                  #sudo openocd
                                   sudo apt-get install xvfb
 
                         - uses: actions/checkout@v2
