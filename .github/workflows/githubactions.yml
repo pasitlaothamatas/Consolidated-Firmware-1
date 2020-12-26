@@ -65,4 +65,4 @@ jobs:
                           run: |
                                   ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMx
                           env: 
-                                "${matrix.env}" : "true"
+                                ${{matrix.env}} : "true"
