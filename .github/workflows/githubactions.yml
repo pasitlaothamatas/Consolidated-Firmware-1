@@ -5,7 +5,7 @@ on: [pull_request]
 
 jobs:
         Firmware_Tests:
-                name: ${matrix.Name}                        
+                name: "${matrix.Name}"                        
                 runs-on: ubuntu-16.04
                 strategy:
                         matrix:
@@ -53,16 +53,16 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
-                                  echo "${env.INSTALL_DIR}/bin:${env.CUBE_INSTALL_DIR}:$GITHUB_PATH && ./scripts/travis_ci/travis_install_binaries.sh ${env.INSTALL_DIR} ${env.CUBE_INSTALL_DIR}" >> $GITHUB_PATH
+                                  echo ""${env.INSTALL_DIR}"/bin:"${env.CUBE_INSTALL_DIR}":$GITHUB_PATH && ./scripts/travis_ci/travis_install_binaries.sh "${env.INSTALL_DIR}" "${env.CUBE_INSTALL_DIR}"" >> $GITHUB_PATH
                         
-                        - name: Before ${matrix.name}
+                        - name: Before "${matrix.name}"
                           run: |
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
-                                ${matrix.env} : "true"
+                                "${matrix.env}" : "true"
                                   
-                        - name: ${matrix.name}
+                        - name: "${matrix.name}"
                           run: |
-                                  ./scripts/travis_ci/travis_script.sh ${env.CUBE_INSTALL_DIR}/STM32CubeMx
+                                  ./scripts/travis_ci/travis_script.sh "${env.CUBE_INSTALL_DIR}"/STM32CubeMx
                           env: 
-                                ${matrix.env} : "true"
+                                "${matrix.env}" : "true"
