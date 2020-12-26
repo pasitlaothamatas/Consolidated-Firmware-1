@@ -14,10 +14,10 @@ jobs:
                                   env: RUN_X86_TESTS
                                 - Name: "Check Formatting"
                                   env: RUN_FORMATTING_CHECKS
-                                #- Name: "Build ARM Executables"
-                                #  env: RUN_ARM_BUILD
-                                - Name: "Check STM32CubeMX Code Generation"
-                                  env: RUN_CUBE_CODEGEN_CHECKS 
+                                - Name: "Build ARM Executables"
+                                  env: RUN_ARM_BUILD
+                                #- Name: "Check STM32CubeMX Code Generation"
+                                #  env: RUN_CUBE_CODEGEN_CHECKS 
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
