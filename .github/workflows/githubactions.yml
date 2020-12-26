@@ -29,7 +29,7 @@ jobs:
                                   sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
-                                  sudo apt-get install libncurses5
+                                  sudo apt-get install libncurses5:i386
                                   sudo apt-get install libbz2-1.0
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
