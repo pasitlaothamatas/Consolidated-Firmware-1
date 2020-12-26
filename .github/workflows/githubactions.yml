@@ -14,8 +14,8 @@ jobs:
                                   env: RUN_X86_TESTS
                                 - Name: "Check Formatting"
                                   env: RUN_FORMATTING_CHECKS
-                                #- Name: "Build ARM Executables"
-                                #  env: RUN_ARM_BUILD
+                                - Name: "Build ARM Executables"
+                                  env: RUN_ARM_BUILD
                                 #- Name: "Check STM32CubeMX Code Generation"
                                 #  env: RUN_CUBE_CODEGEN_CHECKS 
                 env: 
@@ -54,8 +54,6 @@ jobs:
                                   pipenv install
                                   echo "${{ env.INSTALL_DIR }}/bin:${{ env.CUBE_INSTALL_DIR }}:${{ env.PATH }}/.local/bin && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{ env.INSTALL_DIR }} ${{ env.CUBE_INSTALL_DIR }}" >> $GITHUB_PATH
-                          #env: 
-                                #PATH : ${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:${{env.PATH}} && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                         
                         - name: Before ${{ matrix.name }}
                           run: |
@@ -68,4 +66,3 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh ${{ env.CUBE_INSTALL_DIR }}/STM32CubeMx
                           env: 
                                 ${{ matrix.env }} : "true"
-                                #PATH : ${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:${{env.PATH}} && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
