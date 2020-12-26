@@ -33,9 +33,7 @@ jobs:
                                   sudo apt-get install libz1
                                   sudo apt-get install valgrind
                                   sudo apt-get install 
-                                  sudo gcc-arm-none-eabi binutils-arm-none-eabi 
-                                  #sudo gdb-arm-none-eabi 
-                                  #sudo openocd
+                                  sudo gcc-arm-none-eabi
                                   sudo apt-get install xvfb
 
                         - uses: actions/checkout@v2
