@@ -27,6 +27,7 @@ jobs:
                         - name: Install-Addons
                           run: |               
                                   sudo apt-get update
+                                  java -version
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5
                                   sudo apt-get install libbz2-1.0
