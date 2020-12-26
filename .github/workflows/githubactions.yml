@@ -63,6 +63,7 @@ jobs:
                                   ./scripts/travis_ci/print_bin_versions.sh
                           env: 
                                 ${{ matrix.env }} : "true"
+                                CUBE_INSTALL_DIR: ${{ env.CUBE_INSTALL_DIR }}
                                   
                         - name: ${{ matrix.name }}
                           run: |
