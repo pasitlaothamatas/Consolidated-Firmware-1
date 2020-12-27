@@ -56,11 +56,8 @@ jobs:
                                   echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
                                   
-                                  sudo ./scripts/environment_setup/install_cmake.sh /usr/local
-                                  sudo ./scripts/environment_setup/install_gcc_arm_none_eabi.sh /usr/local
-                                  pipenv run sudo python scripts/environment_setup/install_cube.py /usr/local/STM32CubeMX ./tools/en.STM32CubeMX_v5-3-0.zip
-
                           env: 
+                                ${{matrix.env}} : "true"
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                                 PYTHONPATH: $PWD
