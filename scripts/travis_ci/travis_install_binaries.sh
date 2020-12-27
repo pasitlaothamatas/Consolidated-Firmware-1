@@ -18,7 +18,7 @@ if [ "$RUN_ARM_BUILD" = "true" ] || [ "$RUN_X86_TESTS" = "true" ] || [ "$RUN_CUB
     INSTALL_DIR=$1
     CUBE_INSTALL_DIR=$2
     # Install binaries
-    travis_run sudo scripts/environment_setup/install_cmake.sh $INSTALL_DIR
-    travis_run sudo scripts/environment_setup/install_gcc_arm_none_eabi.sh $INSTALL_DIR
-    travis_run pipenv run sudo python scripts/environment_setup/install_cube.py $CUBE_INSTALL_DIR ./tools/en.STM32CubeMX_v5-3-0.zip
+    travis_run sudo ./scripts/environment_setup/install_cmake.sh $INSTALL_DIR
+    travis_run sudo ./scripts/environment_setup/install_gcc_arm_none_eabi.sh $INSTALL_DIR
+    travis_run pipenv run sudo python ./scripts/environment_setup/install_cube.py $CUBE_INSTALL_DIR ./tools/en.STM32CubeMX_v5-3-0.zip
 fi
