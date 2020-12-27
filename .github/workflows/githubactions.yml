@@ -55,6 +55,7 @@ jobs:
                                   pipenv install
                                   echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
+                                  echo ${GITHUB_PATH}
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
