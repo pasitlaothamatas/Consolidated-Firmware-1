@@ -21,7 +21,7 @@ jobs:
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
-                        PYTHONPATH: $PWD
+                        PYTHONPATH: ${GITHUB_WORKSPACE}
         
                 steps:                               
                         - name: Install-Addons
