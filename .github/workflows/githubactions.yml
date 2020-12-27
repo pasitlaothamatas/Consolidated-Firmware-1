@@ -57,6 +57,8 @@ jobs:
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
                                   
                                   sudo ./scripts/environment_setup/install_cmake.sh /usr/local
+                                  sudo ./scripts/environment_setup/install_gcc_arm_none_eabi.sh /usr/local
+
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
