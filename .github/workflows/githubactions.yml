@@ -6,7 +6,7 @@ on: [pull_request]
 jobs:
         Firmware_Tests:
                 name: ${{matrix.Name}}                        
-                runs-on: ubuntu-latest
+                runs-on: ubuntu-18.04
                 strategy:
                         matrix:
                                 include:
