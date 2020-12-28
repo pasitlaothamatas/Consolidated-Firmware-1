@@ -27,6 +27,7 @@ jobs:
                         - name: Install-Addons
                           run: |               
                                   sudo apt-get update
+                                  sudo apt-get install systemd
                                   sudo apt install default-jdk
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5
@@ -36,7 +37,8 @@ jobs:
                                   sudo apt-get install gcc-arm-none-eabi
                                   sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install xvfb
-                                  xvfb -run
+                                  sudo systemctl start xvfb
+                                  export DISPLAY=:99.0
 
                         - uses: actions/checkout@v2
                           with:
