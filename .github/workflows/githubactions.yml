@@ -36,7 +36,8 @@ jobs:
                                   #sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install systemd
                                   sudo apt-get install xvfb -y
-                                
+                                  export DISPLAY=':99.0'
+                                                                
                         - uses: actions/checkout@v2
                           with:
                                  fetch-depth: 50
@@ -51,9 +52,7 @@ jobs:
                                   git lfs pull
                                   
                         - name: Install
-                          uses: GabrielBB/xvfb-action@v1.0
-                          with:
-                                run: |
+                          run: |
                                   pipenv install                                
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
