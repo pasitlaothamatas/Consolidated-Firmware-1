@@ -68,14 +68,14 @@ jobs:
                                 PYTHONPATH: $PWD
                                 ${{matrix.env}} : "true"
                                                                                         
-                        - name: Before ${{matrix.name}}
+                        #- name: Before ${{matrix.name}}
                           #run: |
                           #        ./scripts/travis_ci/print_bin_versions.sh
-                          env: 
-                                INSTALL_DIR: /usr/local
-                                CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
-                                PYTHONPATH: $PWD
-                                ${{matrix.env}} : "true"
+                          #env: 
+                          #      INSTALL_DIR: /usr/local
+                          #      CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
+                          #      PYTHONPATH: $PWD
+                          #      ${{matrix.env}} : "true"
                                   
                         - name: ${{matrix.name}}
                           run: |
