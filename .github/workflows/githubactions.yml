@@ -28,15 +28,8 @@ jobs:
                           run: |               
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
-                                  sudo apt-get install libncurses5
-                                  sudo apt-get install libbz2-1.0
-                                  sudo apt-get install libz1
-                                  sudo apt-get install valgrind
-                                  #sudo apt-get install gcc-arm-none-eabi
-                                  #sudo apt-get install gdb-arm-none-eabi
-                                  sudo apt-get install systemd
-                                  sudo apt install gvncviewer
-                                  sudo apt install xvfb x11vnc vncviewer       
+                                  sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
+                                  sudo apt install xvfb
                                                                                            
                         - uses: actions/checkout@v2
                           with:
