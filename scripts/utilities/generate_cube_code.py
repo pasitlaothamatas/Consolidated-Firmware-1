@@ -7,6 +7,9 @@ import os
 import subprocess
 import argparse
 
+dirname = os.path.dirname(__file__)
+print dirname
+
 from scripts.utilities.supported_boards import get_board_names
 
 CUBE_SCRIPT = '''\
