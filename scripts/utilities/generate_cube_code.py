@@ -7,7 +7,7 @@ import os
 import subprocess
 import argparse
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, scripts/utilities/get_board_names.py)
 from scripts.utilities.supported_boards import get_board_names
 
 CUBE_SCRIPT = '''\
