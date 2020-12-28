@@ -35,9 +35,8 @@ jobs:
                                   #sudo apt-get install gcc-arm-none-eabi
                                   #sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install systemd
-                                  sudo apt-get install xvfb -y
-                                  export DISPLAY=':99.0'
-                                                                
+                                  sudo apt install xvfb x11vnc vncviewer       
+                                                                                           
                         - uses: actions/checkout@v2
                           with:
                                  fetch-depth: 50
