@@ -16,8 +16,8 @@ jobs:
                                 #  env: RUN_FORMATTING_CHECKS
                                 - Name: "Build ARM Executables"
                                   env: RUN_ARM_BUILD
-                                #- Name: "Check STM32CubeMX Code Generation"
-                                #  env: RUN_CUBE_CODEGEN_CHECKS 
+                                - Name: "Check STM32CubeMX Code Generation"
+                                  env: RUN_CUBE_CODEGEN_CHECKS 
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
@@ -52,17 +52,11 @@ jobs:
                                   
                         - name: Install
                           run: |
-                                  pipenv install
-                                  #echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && 
-                                  #./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
-                                  #echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && ./scripts/travis_ci" >> $GITHUB_PATH
-                                  #./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBHE_INSTALL_DIR}}
-                                  
+                                  pipenv install                                
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                                   ./scripts/travis_ci/print_bin_versions.sh
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
-                                  which STM32CubeMX
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
