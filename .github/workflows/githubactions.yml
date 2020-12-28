@@ -53,7 +53,9 @@ jobs:
                                   
                         - name: Install
                           run: |
-                                  pipenv install                                
+                                  pipenv install
+                                  PYTHONPATH ="$PYTHONPATH:./scripts"    
+                                                              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                                   ./scripts/travis_ci/print_bin_versions.sh
