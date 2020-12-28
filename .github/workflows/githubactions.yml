@@ -37,9 +37,8 @@ jobs:
                                   sudo apt-get install gcc-arm-none-eabi
                                   sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install xvfb
-                                  sudo systemctl start xvfb
-                                  export DISPLAY=:99.0
-
+                                  sudo systemctl start xvfb@:99.service
+                                
                         - uses: actions/checkout@v2
                           with:
                                  fetch-depth: 50
