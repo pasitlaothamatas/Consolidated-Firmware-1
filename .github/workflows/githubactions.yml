@@ -46,9 +46,7 @@ jobs:
                                   git lfs pull
                                   
                         - name: Install
-                          uses: GabrielBB/xvfb-action@v1
-                          with:
-                            run: |
+                          run: |
                                   pipenv install
                                                               
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
