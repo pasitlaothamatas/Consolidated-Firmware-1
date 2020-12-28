@@ -60,6 +60,8 @@ jobs:
                                   
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
+                                  ./scripts/travis_ci/print_bin_versions.sh
+
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
@@ -67,8 +69,8 @@ jobs:
                                 ${{matrix.env}} : "true"
                                                                                         
                         - name: Before ${{matrix.name}}
-                          run: |
-                                  ./scripts/travis_ci/print_bin_versions.sh
+                          #run: |
+                          #        ./scripts/travis_ci/print_bin_versions.sh
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
