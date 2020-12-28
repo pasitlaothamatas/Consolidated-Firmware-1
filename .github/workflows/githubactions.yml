@@ -37,6 +37,8 @@ jobs:
                                   sudo apt-get install gcc-arm-none-eabi
                                   sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install xvfb -y
+                                  sudo systemctl enable /etc/systemd/system/xvfb.service
+                                  sudo service xvfb start
                                 
                         - uses: actions/checkout@v2
                           with:
