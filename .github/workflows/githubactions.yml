@@ -53,10 +53,13 @@ jobs:
                         - name: Install
                           run: |
                                   pipenv install
-                                  echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && 
-                                  ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
+                                  #echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && 
+                                  #./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}" >> $GITHUB_PATH
                                   #echo "${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$GITHUB_PATH && ./scripts/travis_ci" >> $GITHUB_PATH
-                                  ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBHE_INSTALL_DIR}}
+                                  #./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBHE_INSTALL_DIR}}
+                                  
+                                  PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
+                                  ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                           env: 
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
