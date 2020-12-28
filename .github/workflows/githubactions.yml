@@ -35,6 +35,7 @@ jobs:
                                   #sudo apt-get install gcc-arm-none-eabi
                                   #sudo apt-get install gdb-arm-none-eabi
                                   sudo apt-get install systemd
+                                  sudo apt install gvncviewer
                                   sudo apt install xvfb x11vnc vncviewer       
                                                                                            
                         - uses: actions/checkout@v2
