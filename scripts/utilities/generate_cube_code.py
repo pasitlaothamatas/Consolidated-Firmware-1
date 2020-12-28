@@ -8,7 +8,7 @@ import subprocess
 import argparse
 
 dirname = os.path.dirname(__file__)
-print dirname
+print (dirname)
 
 from scripts.utilities.supported_boards import get_board_names
 
