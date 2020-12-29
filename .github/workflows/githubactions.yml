@@ -30,7 +30,8 @@ jobs:
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
-                                  xvfb-run
+                                  xvfb-run --server-num
+
                                   export DISPLAY=':99.0'
                                                                                            
                         - uses: actions/checkout@v2
