@@ -41,12 +41,9 @@ jobs:
                         - name: Before-Install
                           run: |
                                   sudo apt-get install xvfb
-                                  sudo apt-get install systemd
-                                  #vim xvfb.service
-                                  
+                                  sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  
-                                  #sudo systemctl enable xvfb.service
+                                  sudo systemctl enable xvfb.service
                                   #sudo systemctl start xvfb.service
                                   #export DISPLAY=':99.0'
                                   
