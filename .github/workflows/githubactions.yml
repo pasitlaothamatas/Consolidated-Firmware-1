@@ -31,9 +31,13 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd
-                                  xvfb-run --auto-display tox -v --recreate
+                                  
+                                  
+                                  vim xvfb.service
+                                  cp xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo systemctl enable xvfb.service
+                                  sudo systemctl start xvfb.service
                                   export DISPLAY=':99.0'
-
                                                                                            
                         - uses: actions/checkout@v2
                           with:
