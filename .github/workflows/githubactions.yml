@@ -29,7 +29,12 @@ jobs:
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
-           
+                                        
+                                  sudo apt-get install xvfb
+                                  sudo apt-get install systemd                                  
+                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo systemctl start xvfb
+                                  export DISPLAY=:99.0
                                                                                            
                         - uses: actions/checkout@v2
                           with:
@@ -39,21 +44,13 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          run: |
-                                  
-                                  
+                          run: |                               
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
                                   
                         - name: Install
                           run: |
-                                  sudo apt-get install xvfb
-                                  sudo apt-get install systemd                                  
-                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  sudo systemctl start xvfb.service
-                                  export DISPLAY=':99.0'
-                                  
                                   pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
