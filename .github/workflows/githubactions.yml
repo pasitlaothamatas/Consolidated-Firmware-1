@@ -6,7 +6,7 @@ on: [pull_request]
 jobs:
         Firmware_Tests:
                 name: ${{matrix.Name}}                        
-                runs-on: ubuntu-20.04
+                runs-on: ubuntu-18.04
                 strategy:
                         matrix:
                                 include:
@@ -30,7 +30,7 @@ jobs:
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
-                                  sudp apt-get install systemd
+                                  sudo apt-get install systemd
                                   #sudo systemctl enable xvfb
                                   export DISPLAY=':99.0'
                                   Xvfb -ac :99 -screen 0 1280x1024x16 > /dev/null 2>&1 &
