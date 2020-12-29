@@ -44,7 +44,7 @@ jobs:
                                   sudo apt-get install systemd
                                   #vim xvfb.service
                                   
-                                  cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   
                                   #sudo systemctl enable xvfb.service
                                   #sudo systemctl start xvfb.service
