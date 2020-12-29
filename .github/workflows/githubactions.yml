@@ -31,9 +31,8 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd
-                                  #sudo systemctl enable xvfb
+                                  sudo systemctl start xvfb.service
                                   export DISPLAY=':99.0'
-                                  Xvfb -ac :99 -screen 0 1280x1024x16 > /dev/null 2>&1 &
 
                                                                                            
                         - uses: actions/checkout@v2
