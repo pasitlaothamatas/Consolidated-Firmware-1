@@ -30,7 +30,6 @@ jobs:
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
-                                  xvfb-run --auto-servernum npm test
                                                                                            
                         - uses: actions/checkout@v2
                           with:
@@ -47,8 +46,7 @@ jobs:
                                   
                         - name: Install
                           run: |
-                                  pipenv install
-                                                              
+                                  pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                                   ./scripts/travis_ci/print_bin_versions.sh
