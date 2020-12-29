@@ -33,7 +33,7 @@ if [ "$RUN_ARM_BUILD" = "true" ]; then
         # For now, the maximum RAM and FLASH size are the same for every board.
         MAX_RAM_SIZE=40960 
         MAX_FLASH_SIZE=262144
-        travis_run ./scripts/travis_ci/series_ci.sh $BOARD $BUILD_DIR/$BOARD/$BOARD.elf $SHA $MAX_RAM_SIZE $MAX_FLASH_SIZE
+        #travis_run ./scripts/travis_ci/series_ci.sh $BOARD $BUILD_DIR/$BOARD/$BOARD.elf $SHA $MAX_RAM_SIZE $MAX_FLASH_SIZE
     done
 fi
 
