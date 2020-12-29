@@ -40,11 +40,7 @@ jobs:
                                   python-version: 3.6
                         - name: Before-Install
                           run: |
-                                  sudo apt-get install xvfb
-                                  sudo apt-get install systemd                                  
-                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  sudo systemctl start xvfb.service
-                                  export DISPLAY=':99.0'
+                                  
                                   
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
@@ -52,6 +48,12 @@ jobs:
                                   
                         - name: Install
                           run: |
+                                  sudo apt-get install xvfb
+                                  sudo apt-get install systemd                                  
+                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo systemctl start xvfb.service
+                                  export DISPLAY=':99.0'
+                                  
                                   pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
