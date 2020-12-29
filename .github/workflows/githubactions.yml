@@ -25,18 +25,13 @@ jobs:
         
                 steps:                               
                         - name: Install-Addons
-                        - uses: "finnp/create-file-action@master"
-                          with:
-                                run: |               
+                          run: |               
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                   sudo apt-get install xvfb
                                   sudo systemctl enable xvfb
                                   export DISPLAY=':99.0'
-                          env:
-                                FILE_NAME: "./etc/systemd/system/xvfb.service"
-                                FILE_DATA: "[Unit] Description=X Virtual Frame Buffer Service After=network.target [Service] ExecStart=/usr/bin/Xvfb :99 -screen 0 1024x768x24 [Install] WantedBy=multi-user.target"
                                                                                            
                         - uses: actions/checkout@v2
                           with:
