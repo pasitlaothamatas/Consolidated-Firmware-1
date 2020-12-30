@@ -42,15 +42,15 @@ jobs:
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  export DISPLAY=0.0
-                                  Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-                                               
+                                  sudo systemctl start xvfb
+                                                                                 
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
                                   git lfs pull
                                   
                         - name: Install
                           run: |                                
+                                  export DISPLAY=99.0
                                   pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
