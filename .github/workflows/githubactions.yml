@@ -53,11 +53,8 @@ jobs:
                                                               
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   
-                                  sudo systemctl enable xvfb
                                   sudo systemctl start xvfb
-                                                               
-                                  DISPLAY=localhost:99.0
-                                  
+                                                                                                 
                                   sleep 3
                                   
                                   pipenv install 
@@ -68,6 +65,7 @@ jobs:
                                   
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
                           env: 
+                                DISPLAY: 99.0
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                                 PYTHONPATH: $PWD
