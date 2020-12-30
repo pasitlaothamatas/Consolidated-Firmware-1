@@ -51,10 +51,9 @@ jobs:
                         - name: Install
                           run: |                                
                                   pipenv install              
-                                  export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
+                                  PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
                                   ./scripts/travis_ci/print_bin_versions.sh
-                                  ls /usr/local
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
                           env: 
                                 INSTALL_DIR: /usr/local
