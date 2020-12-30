@@ -72,7 +72,7 @@ def generate_cubemx_code(board, ioc, codegen_dir, cubemx, log4j_properties):
     log4j_properties_f.close()
 
     # Generate STM32CubeMX code
-    proc = subprocess.Popen(['java', '-jar', ./cubemx, '-q', cube_script_f.name])
+    proc = subprocess.Popen(['java', '-jar', cubemx, '-q', cube_script_f.name])
     # Note: If the STM32CubeMX script encounters an exception (e.g. It can't
     # find the a valid script), the process may never exit so there is no status
     # code to check at all. Account for this by setting a time out.
@@ -81,6 +81,7 @@ def generate_cubemx_code(board, ioc, codegen_dir, cubemx, log4j_properties):
         proc.wait(timeout_sec)
     except subprocess.TimeoutExpired:
         raise Exception('STM32CubeMX execution has timed out after {} seconds.'.format(str(timeout_sec)))
+    print (proc.returncode)
     #if proc.returncode is not 0:
     #    raise Exception('An error occured while executing STM32CubeMX.')
 
