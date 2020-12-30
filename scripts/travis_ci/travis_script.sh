@@ -89,7 +89,7 @@ if [ "$RUN_CUBE_CODEGEN_CHECKS" = "true" ]; then
     # Use .ioc to update STM32CubeMX auto-generated code
     for BOARD in $(get_valid_board_names)
     do travis_run python \
-      scripts/utilities/6868686868generate_cube_code.py \
+      scripts/utilities/generate_cube_code.py \
         --board $BOARD \
         --log4j_properties_output ~/.stm32cubemx/log4j.properties \
         --ioc boards/$BOARD/$BOARD.ioc \
