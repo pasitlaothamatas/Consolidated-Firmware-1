@@ -44,7 +44,6 @@ jobs:
                           run: |          
                                   sudo systemctl start xvfb
                                   export DISPLAY=:99.0    
-                                  export PYTHONPATH=$PWD
                                                  
                                   pipenv install     
                                            
