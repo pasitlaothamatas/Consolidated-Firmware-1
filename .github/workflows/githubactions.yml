@@ -31,8 +31,6 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                                                                                 
                         - uses: actions/checkout@v2
-                          #with:
-                          #       fetch-depth: 50
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
@@ -60,7 +58,4 @@ jobs:
                                   
                                   ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMX
                           env: 
-                                INSTALL_DIR: /usr/local
-                                CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
-                                PYTHONPATH: $PWD
                                 ${{matrix.env}} : "true"
