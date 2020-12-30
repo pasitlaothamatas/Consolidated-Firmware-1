@@ -39,7 +39,7 @@ void App_SharedClock_SetPreviousTimeInMilliseconds(
  * @param clock The clock to get current time for
  * @return The current time for the given clock, in milliseconds
  */
-uint2_t
+uint32_t
     App_SharedClock_GetCurrentTimeInMilliseconds(const struct Clock *clock);
 
 /**
