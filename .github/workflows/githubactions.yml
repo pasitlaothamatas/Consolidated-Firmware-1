@@ -50,9 +50,9 @@ jobs:
                                   
                         - name: Install
                           run: |
-                                  export INSTALL_DIR=/usr/local
-                                  export CUBE_INSTALL_DIR=$INSTALL_DIR/STM32CubeMX
-                                  export PYTHONPATH=$PWD
+                                  #export INSTALL_DIR=/usr/local
+                                  #export CUBE_INSTALL_DIR=$INSTALL_DIR/STM32CubeMX
+                                  #export PYTHONPATH=$PWD
                                   
                                   pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
