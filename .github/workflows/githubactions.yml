@@ -42,9 +42,8 @@ jobs:
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  export DISPLAY=:99.0
-                                  ./etc/init.d/xvfb start
-                                  sleep 3
+                                  export DISPLAY=':99.0'
+                                  Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
