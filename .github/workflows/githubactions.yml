@@ -55,7 +55,7 @@ jobs:
                                   
                                   sudo systemctl start xvfb
                                                                
-                                  DISPLAY=99.0
+                                  export DISPLAY=localhost:0
                                   
                                   pipenv install 
                                                
