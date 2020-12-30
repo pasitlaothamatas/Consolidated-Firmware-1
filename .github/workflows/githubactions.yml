@@ -42,6 +42,7 @@ jobs:
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo systemctl enable xvfb
                                   sudo systemctl start xvfb
                                   export DISPLAY=:99.0
                                                
