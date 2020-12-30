@@ -38,29 +38,25 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          run: |    
-                                  sudo apt-get install xvfb systemd
-                                                                                                
+                          run: |                  
+                                  sudo apt-get install xvfb
+                                  sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  
                                   sudo systemctl start xvfb
-                                                                            
+                                  export DISPLAY=:99.0
+                                               
                                   ./scripts/travis_ci/pull_git_submodules.sh
-                                  
                                   pip install pipenv
-                                  
                                   git lfs pull
                                   
                         - name: Install
-                          run: |                                                                                                                                     
-                                  pipenv install 
-                                               
-                                  PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} ./scripts/travis_ci/print_bin_versions.sh
-                                  
-                                  
+                          run: |                                
+                                  pipenv install              
+                                  PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
+                                  ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
+                                  ./scripts/travis_ci/print_bin_versions.sh
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMX
                           env: 
-                                DISPLAY: 99.0
                                 INSTALL_DIR: /usr/local
                                 CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                                 PYTHONPATH: $PWD
