@@ -53,9 +53,10 @@ jobs:
                                                               
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   
+                                  sudo systemctl enable xvfb
                                   sudo systemctl start xvfb
                                                                
-                                  export DISPLAY=localhost:99.0
+                                  DISPLAY=localhost:99.0
                                   
                                   sleep 3
                                   
