@@ -24,26 +24,38 @@ jobs:
                         PYTHONPATH: $PWD
         
                 steps:                               
-                        - name: Install-Addons
+                        - name: Install Addons
                           run: |               
                                   sudo apt-get update
+                                  
                                   sudo dpkg --add-architecture i386
-                                  sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind                                                                              
-                
-                        - name: Before-Install
+                                  
+                                  sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
+                                                                                                
+                        - uses: actions/checkout@v2
+                        - name: Install-Python-Packages
+                          uses: actions/setup-python@v2
+                          with:
+                                  python-version: 3.6
+                        - name: Before Install
                           run: |                  
                                   sudo apt-get install xvfb
-                                  sudo apt-get install systemd                                  
+                                  
+                                  sudo apt-get install systemd              
+                                                      
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
+                                  
                                   pip install pipenv
+                                  
                                   git lfs pull
                                   
                         - name: Install
                           run: |          
                                   sudo systemctl start xvfb
-                                  export DISPLAY=:99.0    
+                                  
+                                  export DISPLAY=:99.0       
                                                  
                                   pipenv install     
                                            
