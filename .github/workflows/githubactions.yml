@@ -61,6 +61,6 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                           env: 
                                 INSTALL_DIR: /usr/local
-                                CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                                CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                                 PYTHONPATH: $PWD
                                 ${{matrix.env}} : "true"
