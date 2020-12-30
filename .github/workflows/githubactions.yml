@@ -43,7 +43,7 @@ jobs:
                                   sudo apt-get install systemd                                  
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   export DISPLAY=:99.0
-                                  sh -e /etc/init.d/xvfb start
+                                  ./etc/init.d/xvfb start
                                   sleep 3
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
