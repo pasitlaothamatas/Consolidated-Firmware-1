@@ -38,7 +38,13 @@ jobs:
                           with:
                                   python-version: 3.6
                         - name: Before-Install
-                          run: |                                              
+                          run: |    
+                                  sudo apt-get install xvfb systemd
+                                                                                                
+                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  
+                                  sudo systemctl start xvfb
+                                                                            
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   
                                   pip install pipenv
@@ -46,17 +52,7 @@ jobs:
                                   git lfs pull
                                   
                         - name: Install
-                          run: |   
-                                  sudo apt-get install xvfb
-                                  
-                                  sudo apt-get install systemd      
-                                                              
-                                  sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
-                                  
-                                  sudo systemctl start xvfb
-                                                                                                 
-                                  sleep 3
-                                  
+                          run: |                                                                                                                                     
                                   pipenv install 
                                                
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
