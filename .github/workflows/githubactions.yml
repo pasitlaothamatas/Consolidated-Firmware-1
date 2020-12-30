@@ -10,10 +10,10 @@ jobs:
                 strategy:
                         matrix:
                                 include:
-                                #- Name: "Build and Run x86 Tests"
-                                #  env: RUN_X86_TESTS
-                                #- Name: "Check Formatting"
-                                #  env: RUN_FORMATTING_CHECKS
+                                - Name: "Build and Run x86 Tests"
+                                  env: RUN_X86_TESTS
+                                - Name: "Check Formatting"
+                                  env: RUN_FORMATTING_CHECKS
                                 - Name: "Build ARM Executables"
                                   env: RUN_ARM_BUILD
                                 - Name: "Check STM32CubeMX Code Generation"
@@ -31,8 +31,8 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                                                                                 
                         - uses: actions/checkout@v2
-                          with:
-                                 fetch-depth: 50
+                          #with:
+                          #       fetch-depth: 50
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
                           with:
