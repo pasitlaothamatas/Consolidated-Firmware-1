@@ -49,11 +49,7 @@ jobs:
                                   git lfs pull
                                   
                         - name: Install
-                          run: |
-                                  export INSTALL_DIR=/usr/local
-                                  export CUBE_INSTALL_DIR=$INSTALL_DIR/STM32CubeMX
-                                  export PYTHONPATH=$PWD
-                                  
+                          run: |                                
                                   pipenv install              
                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && 
                                   ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}}
@@ -61,6 +57,6 @@ jobs:
                                   ./scripts/travis_ci/travis_script.sh $CUBE_INSTALL_DIR/STM32CubeMx
                           env: 
                                 INSTALL_DIR: /usr/local
-                                CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
+                                CUBE_INSTALL_DIR: /usr/local/STM32CubeMX
                                 PYTHONPATH: $PWD
                                 ${{matrix.env}} : "true"
