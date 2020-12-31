@@ -28,9 +28,7 @@ jobs:
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
-                                  
-                                  export DAB=$DAB:$PWD
-                                                                                                
+                                                                                                                                  
                         - uses: actions/checkout@v2
                         - name: Install-Python-Packages
                           uses: actions/setup-python@v2
@@ -60,10 +58,7 @@ jobs:
                                   export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
                                   ./scripts/travis_ci/print_bin_versions.sh
-                                  
-                                  ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMX
-                                  
-                                  export
+                                  ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMX                                  
                           env: 
                                 ${{matrix.env}} : "true"
                
