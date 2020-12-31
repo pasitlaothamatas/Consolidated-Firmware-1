@@ -37,6 +37,8 @@ jobs:
                                   run: |
                                           # Add current directory to the python path
                                           echo $PYTHONPATH
+                                          
+
                           
                         - name: Install
                           run: |                  
@@ -50,10 +52,14 @@ jobs:
                                   pip install pipenv
                                   git lfs pull
                                   pipenv install     
+                                  
+                        - name: Python Path
+                          shell: |
+                                  export DISPLAY=:99.0
                                                                     
                         - name: Script
                           run: |                                                                                     
-                                  export DISPLAY=:99.0       
+                                  #export DISPLAY=:99.0       
 
                                   export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
