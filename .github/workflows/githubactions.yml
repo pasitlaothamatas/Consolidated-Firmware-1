@@ -33,10 +33,11 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                                                                                 
                         - uses: actions/checkout@v2
-                        - name: Install-Python-Packages
-                          uses: actions/setup-python@v2
-                          with:
-                                  python-version: 3.6
+                        #- name: Install-Python-Packages
+                        #  uses: actions/setup-python@v2
+                        #  with:
+                        #          python-version: 3.6
+                          
                         - name: Before Install
                           run: |                  
                                   sudo apt-get install xvfb
