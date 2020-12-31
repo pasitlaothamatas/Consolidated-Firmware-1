@@ -33,10 +33,10 @@ jobs:
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                                                                                 
                         - uses: actions/checkout@v2
-                        #- name: Install-Python-Packages
-                        #  uses: actions/setup-python@v2
-                        #  with:
-                        #          python-version: 3.6
+                        - name: Install-Python-Packages
+                          uses: actions/setup-python@v2
+                          with:
+                                  python-version: 3.6
                           
                         - name: Before Install
                           run: |                  
@@ -48,9 +48,11 @@ jobs:
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   
-                                  #pip install pipenv
+                                  pip install pipenv
                                   
                                   git lfs pull
+                                  
+                                  export PYTHONPATH=${GITHUB_WORKSPACE}
                                   
                         - name: Install
                           run: |          
@@ -58,7 +60,7 @@ jobs:
                                   
                                   export DISPLAY=:99.0       
                                                  
-                                  #pipenv install     
+                                  pipenv install     
                                            
                                   export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
