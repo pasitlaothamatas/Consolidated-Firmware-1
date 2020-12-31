@@ -54,15 +54,13 @@ jobs:
                           run: |     
                                   # Import the DISPLAY variable
                                   source ~/.bashrc
-                                  
-                                  ~/.bashrc
-                                                                         
+                                                                                                           
                                   #export DISPLAY=:99.0 
                                   
                                   # Set the Python path to the current directory
                                   #export PYTHONPATH=$PYTHONPATH:$PWD
 
-                                   PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
+                                   export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
                                   ./scripts/travis_ci/print_bin_versions.sh
                                   ./scripts/travis_ci/travis_script.sh ${{env.CUBE_INSTALL_DIR}}/STM32CubeMX                                  
