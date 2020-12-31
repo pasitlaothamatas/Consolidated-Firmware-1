@@ -43,6 +43,8 @@ jobs:
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   sudo systemctl start xvfb
                                   echo "export PYTHONPATH=$PYTHONPATH:$PWD" > ~/.bashrc
+                                  echo "export DISPLAY=:99.0" > ~/.bashrc
+
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   pip install pipenv
