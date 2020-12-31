@@ -56,7 +56,7 @@ jobs:
                                   # Import the DISPLAY variable
                                   source ~/.bashrc
                                                                                                            
-                                  export DISPLAY=:99.0 
+                                  #export DISPLAY=:99.0 
                                   
                                   # Set the Python path to the current directory
                                   #export PYTHONPATH=$PYTHONPATH:$PWD
