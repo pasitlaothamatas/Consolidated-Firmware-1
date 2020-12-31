@@ -34,12 +34,12 @@ jobs:
                           uses: actions/setup-python@v2
                           with:
                                   python-version: 3.6
+                                  run: |
+                                          # Add current directory to the python path
+                                          echo $PYTHONPATH
                           
                         - name: Install
                           run: |                  
-                                  # Add current directory to the python path
-                                  echo "${GITHUB_WORSPACE}" >> $PYTHONPATH
-                                  
                                   # Use xvfb to run programs requiring a GUI (e.g. STM32CubeMX code generation)
                                   sudo apt-get install xvfb
                                   sudo apt-get install systemd              
