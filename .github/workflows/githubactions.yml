@@ -22,7 +22,12 @@ jobs:
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
         
-                steps:                               
+                steps:                            
+                        - name: Add Variables
+                          run: |
+                                  # Set the Python path to the current directory
+                                  export PYTHONPATH=$PYTHONPATH:$PWD
+                             
                         - name: Install Addons
                           run: |               
                                   sudo apt-get update
@@ -50,11 +55,12 @@ jobs:
                                                                                                       
                         - name: Script
                           run: |                                                                                     
-                                  export DISPLAY=:99.0 
+                                  DISPLAY=:99.0 
                                   
-                                  export PYTHONPATH=$PYTHONPATH:$PWD
+                                  # Set the Python path to the current directory
+                                  # export PYTHONPATH=$PYTHONPATH:$PWD
 
-                                  export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
+                                  PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
                                   ./scripts/travis_ci/print_bin_versions.sh
                                   
