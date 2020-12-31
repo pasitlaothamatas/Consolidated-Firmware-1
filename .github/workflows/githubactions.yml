@@ -54,6 +54,8 @@ jobs:
                           run: |     
                                   # Import the DISPLAY variable
                                   source ~/.bashrc
+                                  
+                                  ~/.bashrc
                                                                          
                                   #export DISPLAY=:99.0 
                                   
