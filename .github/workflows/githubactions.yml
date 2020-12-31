@@ -42,7 +42,7 @@ jobs:
                                   sudo apt-get install systemd              
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
                                   sudo systemctl start xvfb
-                                  echo "export DISPLAY=99.0" > ~/.bashrc
+                                  echo "export DISPLAY=:99.0" > ~/.bashrc
                                   echo "export PYTHONPATH=$PYTHONPATH:$PWD" > ~/.bashrc
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
