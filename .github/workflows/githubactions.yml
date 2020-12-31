@@ -58,7 +58,7 @@ jobs:
                                   
                                   export DISPLAY=:99.0       
                                                  
-                                  pipenv install     
+                                  #pipenv install     
                                            
                                   export PATH=${{env.INSTALL_DIR}}/bin:${{env.CUBE_INSTALL_DIR}}:$PATH && ./scripts/travis_ci/travis_install_binaries.sh ${{env.INSTALL_DIR}} ${{env.CUBE_INSTALL_DIR}} 
                                   
