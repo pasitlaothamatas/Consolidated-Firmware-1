@@ -38,7 +38,7 @@ jobs:
                         - name: Install
                           run: |                  
                                   # Add current directory to the python path
-                                  echo "$PWD" >> $PYTHONPATH
+                                  echo "${GITHUB_WORSPACE}" >> $PYTHONPATH
                                   
                                   # Use xvfb to run programs requiring a GUI (e.g. STM32CubeMX code generation)
                                   sudo apt-get install xvfb
