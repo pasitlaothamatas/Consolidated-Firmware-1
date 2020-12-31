@@ -48,7 +48,7 @@ jobs:
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
                                   
-                                  pip install pipenv
+                                  #pip install pipenv
                                   
                                   git lfs pull
                                   
