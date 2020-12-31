@@ -21,15 +21,12 @@ jobs:
                 env: 
                         INSTALL_DIR: /usr/local
                         CUBE_INSTALL_DIR: $INSTALL_DIR/STM32CubeMX
-                        PYTHONPATH: $PWD
         
                 steps:                               
                         - name: Install Addons
                           run: |               
                                   sudo apt-get update
-                                  
                                   sudo dpkg --add-architecture i386
-                                  
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
                                                                                                 
                         - uses: actions/checkout@v2
@@ -42,22 +39,19 @@ jobs:
                           run: |                  
                                   sudo apt-get install xvfb
                                   
+                                  # Use xvfb to run programs requiring a GUI (e.g. STM32CubeMX code generation)
                                   sudo apt-get install systemd              
-                                                      
                                   sudo cp ./scripts/environment_setup/xvfb.service /etc/systemd/system/xvfb.service
+                                  sudo systemctl start xvfb
                                                
                                   ./scripts/travis_ci/pull_git_submodules.sh
-                                  
                                   pip install pipenv
-                                  
                                   git lfs pull
                                   
                                   export PYTHONPATH=${GITHUB_WORKSPACE}
                                   
                         - name: Install
-                          run: |          
-                                  sudo systemctl start xvfb
-                                  
+                          run: |                                            
                                   export DISPLAY=:99.0       
                                                  
                                   pipenv install     
