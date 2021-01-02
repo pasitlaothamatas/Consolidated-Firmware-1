@@ -24,7 +24,8 @@ jobs:
         
                 steps:                            
                         - name: Install Addons
-                          run: |               
+                          run: |        
+                                  echo ${GITHUB_SHA}       
                                   sudo apt-get update
                                   sudo dpkg --add-architecture i386
                                   sudo apt-get install libncurses5 libbz2-1.0 libz1 valgrind
