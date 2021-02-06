@@ -18,7 +18,7 @@ static void PreChargeStateRunOnEntry(struct StateMachine *const state_machine)
     App_CanTx_SetPeriodicSignal_PRE_CHARGE_FAULT(
         can_tx, CANMSGS_BMS_NON_CRITICAL_ERRORS_PRE_CHARGE_FAULT_OK_CHOICE);
 
-    App_PreCharge_Enable(pre_charge_sequence);
+    App_PreCharge_Enable(pre_charge);
     App_SharedClock_SetPreviousTimeInMilliseconds(
         clock, App_SharedClock_GetCurrentTimeInMilliseconds(clock));
 }
